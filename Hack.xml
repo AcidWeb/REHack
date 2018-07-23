@@ -39,7 +39,7 @@
 	</CheckButton>
 
 	<Frame name='T_HackResizableFrame' virtual='true' movable='true' resizable='true' enableMouse='true' hidden='false'>
-		<Backdrop edgeFile='Interface\AddOns\REHack\Media\Border' setAllPoint="true" tile='true'>
+		<Backdrop edgeFile='Interface\AddOns\REHack\Media\Border' tile='true'>
 			<BackgroundInsets>
 				<AbsInset left='3' right='3' top='3' bottom='3'/>
 			</BackgroundInsets>
@@ -59,12 +59,12 @@
 						</Anchor>
 						<Anchor point='RIGHT'>
 							<Offset>
-								<AbsDimension x='-3'/>
+								<AbsDimension x='-3' y='0'/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</Texture>
-				<Texture name='$parentBG' file='Interface\AddOns\REHack\Media\EditorTile' setAllPoint='true' vertTile='true' horizTile='true'>
+				<Texture name='$parentBG' file='Interface\AddOns\REHack\Media\EditorTile' vertTile='true' horizTile='true'>
 					<Anchors>
 						<Anchor point="TOPLEFT">
 							<Offset x="3" y='-3'/>
@@ -120,7 +120,7 @@
 
 	<Button name='T_HackListItem' virtual='true'>
 		<Size>
-			<AbsDimension y='17'/>
+			<AbsDimension x='0' y='17'/>
 		</Size>
 		<Anchors>
 			<Anchor point='LEFT' relativeTo='HackListScrollFrame'/>
@@ -131,12 +131,12 @@
 			<Layer level='ARTWORK'>
 				<FontString name='$parentName' inherits='GameFontHighlightSmall' justifyH='LEFT'>
 					<Size>
-						<AbsDimension y='17'/>
+						<AbsDimension x='0' y='17'/>
 					</Size>
 					<Anchors>
 						<Anchor point='LEFT'>
 							<Offset>
-								<AbsDimension x='20'/>
+								<AbsDimension x='20' y='0'/>
 							</Offset>
 						</Anchor>
 						<Anchor point='RIGHT' relativePoint='RIGHT'/>
@@ -149,7 +149,7 @@
 				<Anchors>
 					<Anchor point='LEFT'>
 						<Offset>
-							<AbsDimension x='2'/>
+							<AbsDimension x='2' y='0'/>
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -301,19 +301,19 @@
 					<Anchor point='RIGHT' relativePoint='LEFT' relativeTo='HackSearchBody'/>
 				</Anchors>
 			</CheckButton>
-			<EditBox name='HackSearchEdit' inherits='T_HackTooltipEnabled,InputBoxTemplate' letters='200' autoFocus='false' visible='true'>
+			<EditBox name='HackSearchEdit' inherits='T_HackTooltipEnabled,InputBoxTemplate' letters='200' autoFocus='false'>
 				<Size>
-					<AbsDimension y='10'/>
+					<AbsDimension x='0' y='10'/>
 				</Size>
 				<Anchors>
 					<Anchor point='TOPRIGHT' relativeTo='HackSearchName' relativePoint='TOPLEFT'>
 						<Offset>
-							<AbsDimension y='-2'/>
+							<AbsDimension x='0' y='-2'/>
 						</Offset>
 					</Anchor>
 					<Anchor point='LEFT' relativePoint='CENTER'>
 						<Offset>
-							<AbsDimension x='20'/>
+							<AbsDimension x='20' y='0'/>
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -335,7 +335,7 @@
 					</Anchor>
 					<Anchor point='BOTTOM'>
 						<Offset>
-							<AbsDimension y= '10'/>
+							<AbsDimension x='0' y='10'/>
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -413,7 +413,7 @@
 					</Anchor>
 				</Anchors>
 				<ScrollChild>
-					<EditBox name='HackEditBox' multiLine='true' nonspacewrap='true' spacing='1' autoFocus='false'>
+					<EditBox name='HackEditBox' multiLine='true' autoFocus='false'>
 						<TextInsets>
 							<AbsInset left='5' right='40' top='4' bottom='9'/>
 						</TextInsets>
