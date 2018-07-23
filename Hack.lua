@@ -40,13 +40,14 @@ if (UIDROPDOWNMENU_OPEN_PATCH_VERSION or 0) < 1 then
 end
 
 -- GLOBALS: LE_PARTY_CATEGORY_HOME, UIDROPDOWNMENU_VALUE_PATCH_VERSION, UIDROPDOWNMENU_MAXLEVELS, UIDROPDOWNMENU_MAXBUTTONS, UIDROPDOWNMENU_OPEN_PATCH_VERSION, UIDROPDOWNMENU_OPEN_MENU, issecurevariable, hooksecurefunc
-local select, pairs, format, getglobal, loadstring, type, pcall, gsub, date, strmatch, time = _G.select, _G.pairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.date, _G.strmatch, _G.time
+local select, pairs, format, getglobal, loadstring, type, pcall, gsub, date, strmatch, time, unpack = _G.select, _G.pairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.date, _G.strmatch, _G.time, _G.unpack
 local mmin, mfloor = _G.math.min, _G.math.floor
 local tinsert, tremove, tconcat = _G.table.insert, _G.table.remove, _G.table.concat
 local CreateFrame = _G.CreateFrame
 local EasyMenu = _G.EasyMenu
 local StaticPopup_Show = _G.StaticPopup_Show
 local PlaySound = _G.PlaySound
+local IsAddOnLoaded = _G.IsAddOnLoaded
 local IsShiftKeyDown = _G.IsShiftKeyDown
 local IsInGuild = _G.IsInGuild
 local UnitName = _G.UnitName
@@ -141,6 +142,12 @@ local selected = nil -- index of selected list item
 local function printf(...) _G.DEFAULT_CHAT_FRAME:AddMessage('|cffff6600<REHack>: '..format(...)) end
 local function getobj(...) return getglobal(format(...)) end
 local function enableButton(b,e) if e then _G.HackNew.Enable(b) else _G.HackNew.Disable(b) end end
+local function ElvUISwag(sender)
+	if sender == "Livarax-BurningLegion" then
+		return [[|TInterface\PvPRankBadges\PvPRank09:0|t ]]
+	end
+	return nil
+end
 
 function RE:Find(pattern) -- search books for a page by name
   for _, book in pairs(_G.REHackDB.books) do
@@ -167,7 +174,7 @@ end
 
 -- find page by index or name and return it as a compiled function
 function RE:Get(index)
-  local page = type(index)=='string' and RE:Find(index) or items[index]
+  local page = type(index) == 'string' and RE:Find(index) or items[index]
   if not page then printf('attempt to get an invalid page') return end
   return RE:Compile(page)
 end
@@ -216,7 +223,7 @@ function RE:OnLoad(self)
     li:SetID(i)
   end
 
-  self:RegisterEvent('VARIABLES_LOADED')
+  self:RegisterEvent('ADDON_LOADED')
   self:RegisterEvent('CHAT_MSG_ADDON')
 
   -- Addon message prefixes
@@ -227,40 +234,48 @@ function RE:OnLoad(self)
 
   _G.SLASH_HACKSLASH1 = '/hack'
   _G.SlashCmdList['HACKSLASH'] =
-  function(name)
-    if name == '' then
-      RE:Toggle()
-    else
-      RE:Run(name)
-    end
-  end
-
-  --[[local AS = unpack(AddOnSkins)
-  AS:SkinFrame(HackListFrame)
-  AS:SkinFrame(HackEditFrame)
-  AS:SkinCloseButton(HackListFrameClose)
-  AS:SkinCloseButton(HackEditFrameClose)
-  AS:SkinCheckBox(HackSearchName)
-  AS:SkinCheckBox(HackSearchBody)
-  AS:SkinEditBox(HackSearchEdit)
-  AS:SkinScrollBar(HackEditScrollFrameScrollBar)
-  AS:SkinTab(HackListFrameTab1)
-  AS:SkinTab(HackListFrameTab2)]]--
+	  function(name)
+	    if name == '' then
+	      RE:Toggle()
+	    else
+	      RE:Run(name)
+	    end
+	  end
 end
 
-function RE:VARIABLES_LOADED(_)
-  db = _G.REHackDB
-  items = db.books[db.book].data
-  RE:UpdateFont()
-  RE:UpdateButtons()
-  RE:UpdateSearchContext()
-  _G.HackSnap:SetChecked(_G.REHackDB.snap)
-  RE:Snap()
-  _G.HackListFrame:SetMaxResize(RE.MaxWidth, (RE.MaxVisible * RE.ListItemHeight) + RE.ListVOffset + 5)
-  _G.HackListFrame:SetMinResize(RE.MinWidth, RE.MinHeight)
-  _G.HackListFrame:SetScript('OnSizeChanged', RE.UpdateNumListItemsVisible)
-  RE:UpdateNumListItemsVisible()
-  RE:DoAutorun()
+function RE:ADDON_LOADED(_, addon)
+	if addon == "REHack" then
+	  db = _G.REHackDB
+	  items = db.books[db.book].data
+	  RE:UpdateFont()
+	  RE:UpdateButtons()
+	  RE:UpdateSearchContext()
+	  _G.HackSnap:SetChecked(_G.REHackDB.snap)
+	  RE:Snap()
+	  _G.HackListFrame:SetMaxResize(RE.MaxWidth, (RE.MaxVisible * RE.ListItemHeight) + RE.ListVOffset + 5)
+	  _G.HackListFrame:SetMinResize(RE.MinWidth, RE.MinHeight)
+	  _G.HackListFrame:SetScript('OnSizeChanged', RE.UpdateNumListItemsVisible)
+	  RE:UpdateNumListItemsVisible()
+	  RE:DoAutorun()
+
+		if IsAddOnLoaded("ElvUI") and IsAddOnLoaded("AddOnSkins") then
+			local AS = unpack(_G.AddOnSkins)
+			_G.ElvUI[1]:GetModule("Chat"):AddPluginIcons(ElvUISwag)
+
+			AS:SkinFrame(_G.HackListFrame)
+			AS:SkinFrame(_G.HackEditFrame)
+			AS:SkinCloseButton(_G.HackListFrameClose)
+			AS:SkinCloseButton(_G.HackEditFrameClose)
+			AS:SkinCheckBox(_G.HackSearchName)
+			AS:SkinCheckBox(_G.HackSearchBody)
+			AS:SkinEditBox(_G.HackSearchEdit)
+			AS:SkinScrollBar(_G.HackEditScrollFrameScrollBar)
+			AS:SkinTab(_G.HackListFrameTab1)
+			AS:SkinTab(_G.HackListFrameTab2)
+		end
+
+		_G.HackListFrame:UnregisterEvent('ADDON_LOADED')
+	end
 end
 
 -- switch between viewing books vs pages
@@ -623,7 +638,7 @@ do -- receive page
     elseif #body > 1 then -- append to page body
       tinsert(receiving[id].data, body)
     else -- page end
-    local page = { name=receiving[id].name, data=tconcat(receiving[id].data) }
+    local page = { name = receiving[id].name, data = tconcat(receiving[id].data) }
     receiving[id] = nil
     local dialog = StaticPopup_Show('HackAccept', sender)
     if dialog then
@@ -637,7 +652,7 @@ end
 function RE:MakeESCable(frame,enable)
   local index
   for i=1,#_G.UISpecialFrames do
-    if _G.UISpecialFrames[i]==frame then
+    if _G.UISpecialFrames[i] == frame then
       index = i
       break
     end

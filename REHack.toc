@@ -5,6 +5,4 @@
 ## Author: AcidWeb, Mud, Vandesdelca32
 ## SavedVariables: REHackDB
 
-Hack.lua
 Hack.xml
-Indent.lua
