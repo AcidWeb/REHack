@@ -1,6 +1,7 @@
 local _G = _G
 local _, RE = ...
 _G.REHack = RE
+local COMM = LibStub("AceComm-3.0")
 
 -- UIDropDownMenu taint workaround by foxlit
 if (UIDROPDOWNMENU_VALUE_PATCH_VERSION or 0) < 2 then
@@ -40,9 +41,9 @@ if (UIDROPDOWNMENU_OPEN_PATCH_VERSION or 0) < 1 then
 end
 
 -- GLOBALS: LE_PARTY_CATEGORY_HOME, UIDROPDOWNMENU_VALUE_PATCH_VERSION, UIDROPDOWNMENU_MAXLEVELS, UIDROPDOWNMENU_MAXBUTTONS, UIDROPDOWNMENU_OPEN_PATCH_VERSION, UIDROPDOWNMENU_OPEN_MENU, issecurevariable, hooksecurefunc
-local select, pairs, format, getglobal, loadstring, type, pcall, gsub, date, strmatch, time, unpack = _G.select, _G.pairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.date, _G.strmatch, _G.time, _G.unpack
+local select, pairs, format, getglobal, loadstring, type, pcall, gsub, unpack, strsplit = _G.select, _G.pairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.unpack, _G.strsplit
 local mmin, mfloor = _G.math.min, _G.math.floor
-local tinsert, tremove, tconcat = _G.table.insert, _G.table.remove, _G.table.concat
+local tinsert, tremove = _G.table.insert, _G.table.remove
 local CreateFrame = _G.CreateFrame
 local EasyMenu = _G.EasyMenu
 local StaticPopup_Show = _G.StaticPopup_Show
@@ -53,8 +54,6 @@ local IsInGuild = _G.IsInGuild
 local UnitName = _G.UnitName
 local UnitInRaid = _G.UnitInRaid
 local GetNumGroupMembers = _G.GetNumGroupMembers
-local SendAddonMessage = _G.C_ChatInfo.SendAddonMessage
-local RegisterAddonMessagePrefix = _G.C_ChatInfo.RegisterAddonMessagePrefix
 local FauxScrollFrame_Update = _G.FauxScrollFrame_Update
 local FauxScrollFrame_GetOffset = _G.FauxScrollFrame_GetOffset
 local FauxScrollFrame_SetOffset = _G.FauxScrollFrame_SetOffset
@@ -105,15 +104,15 @@ RE.PlayerName 		=	UnitName("PLAYER")
 _G.BINDING_HEADER_HACK = 'REHack'
 
 StaticPopupDialogs.HackAccept = {
-  text = 'Accept new REHack page from %s?', button1 = 'Yes', button2 = 'No',
-  timeout = 0, whileDead = 1, hideOnEscape = 1,
-  OnAccept = function(self)
-    RE:New(self.page)
-    SendAddonMessage('HackAck', RE.PlayerName, 'WHISPER', self.sender)
-  end,
-  OnCancel = function(self)
-    SendAddonMessage('HackNack', RE.PlayerName, 'WHISPER', self.sender)
-  end,
+	text = 'Accept new REHack page from %s?', button1 = 'Yes', button2 = 'No',
+	timeout = 0, whileDead = 1, hideOnEscape = 1,
+	OnAccept = function(self)
+		RE:New(self.page)
+		COMM:SendCommMessage('REHack', '1ź'..RE.PlayerName, 'WHISPER', self.sender, 'BULK')
+	end,
+	OnCancel = function(self)
+		COMM:SendCommMessage('REHack', '0ź'..RE.PlayerName, 'WHISPER', self.sender, 'BULK')
+	end,
 }
 
 StaticPopupDialogs.HackSendTo = {
@@ -139,7 +138,7 @@ local items -- alias for REHackDB.books[REHackDB.book].data
 local mode = 'page' -- 'page' or 'book'
 local selected = nil -- index of selected list item
 
-local function printf(...) _G.DEFAULT_CHAT_FRAME:AddMessage('|cffff6600<REHack>: '..format(...)) end
+local function printf(...) _G.DEFAULT_CHAT_FRAME:AddMessage('|cffff6600<|r|cFF74D06CRE|r|cffff6600Hack>: '..format(...)) end
 local function getobj(...) return getglobal(format(...)) end
 local function enableButton(b,e) if e then _G.HackNew.Enable(b) else _G.HackNew.Disable(b) end end
 local function ElvUISwag(sender)
@@ -224,13 +223,6 @@ function RE:OnLoad(self)
   end
 
   self:RegisterEvent('ADDON_LOADED')
-  self:RegisterEvent('CHAT_MSG_ADDON')
-
-  -- Addon message prefixes
-  RegisterAddonMessagePrefix("Hack1")
-  RegisterAddonMessagePrefix("Hack2")
-  RegisterAddonMessagePrefix("HackAck")
-  RegisterAddonMessagePrefix("HackNack")
 
   _G.SLASH_HACKSLASH1 = '/hack'
   _G.SlashCmdList['HACKSLASH'] =
@@ -241,6 +233,23 @@ function RE:OnLoad(self)
 	      RE:Run(name)
 	    end
 	  end
+end
+
+function RE:OnAddonMessage(message, _, sender)
+	local signal, _, name, _, payload = strsplit('ź', message)
+	if signal == '0' then
+		printf('%s rejected your page.', sender)
+	elseif signal == '1' then
+		printf('%s accepted your page.', sender)
+	elseif signal == '2' then
+		if sender == RE.PlayerName then return end
+		local page = {name = name, data = payload}
+		local dialog = StaticPopup_Show('HackAccept', sender)
+    if dialog then
+      dialog.page = page
+      dialog.sender = sender
+    end
+	end
 end
 
 function RE:ADDON_LOADED(_, addon)
@@ -258,9 +267,11 @@ function RE:ADDON_LOADED(_, addon)
 	  RE:UpdateNumListItemsVisible()
 	  RE:DoAutorun()
 
-		if IsAddOnLoaded("ElvUI") and IsAddOnLoaded("AddOnSkins") then
+		COMM:RegisterComm('REHack', RE.OnAddonMessage)
+
+		if IsAddOnLoaded('ElvUI') and IsAddOnLoaded('AddOnSkins') then
 			local AS = unpack(_G.AddOnSkins)
-			_G.ElvUI[1]:GetModule("Chat"):AddPluginIcons(ElvUISwag)
+			_G.ElvUI[1]:GetModule('Chat'):AddPluginIcons(ElvUISwag)
 
 			AS:SkinFrame(_G.HackListFrame)
 			AS:SkinFrame(_G.HackEditFrame)
@@ -582,9 +593,8 @@ function RE:UpdateListItems()
   end
 
   do
-    local function send(self) RE:SendPage(items[selected], self.value) end
     local menu = {
-      { text = 'Player', func = function()
+      {text = 'Player', func = function()
         local dialog = StaticPopup_Show('HackSendTo')
         if dialog then
           dialog.page = items[selected]
@@ -592,10 +602,10 @@ function RE:UpdateListItems()
         end
       end
     },
-    { text = 'Party', func = send },
-    { text = 'Raid',  func = send },
-    { text = 'Guild', func = send },
-    { text = 'Cancel' },
+    {text = 'Party', func = function(self) RE:SendPage(items[selected], self.value) end},
+    {text = 'Raid',  func = function(self) RE:SendPage(items[selected], self.value) end},
+    {text = 'Guild', func = function(self) RE:SendPage(items[selected], self.value) end},
+    {text = 'Cancel'},
   }
   CreateFrame('Frame', 'HackSendMenu', HackListFrame, 'UIDropDownMenuTemplate')
   function RE:Send()
@@ -607,46 +617,7 @@ function RE:UpdateListItems()
 end
 
 function RE:SendPage(page, channel, name)
-  local id = 'Hack'..(time() % 2 + 1)
-  local chunksize = 240 - #id
-  local pagename = format('%s [from %s on %s]', page.name, RE.PlayerName, date())
-  SendAddonMessage(id, pagename, channel, name)
-  for i=1,#page.data,chunksize do
-    SendAddonMessage(id, page.data:sub(i,i+chunksize-1), channel, name)
-  end
-  SendAddonMessage(id, '', channel, name)
-end
-
-do -- receive page
-  local receiving = {}
-  function RE:CHAT_MSG_ADDON(_, _, prefix, body, _, sender)
-    if sender == RE.PlayerName then return end
-    local id
-    if not prefix then
-      id = nil
-    else
-      id = strmatch(prefix, 'Hack(.*)')
-    end
-    if not id then
-      return -- message not for Hack
-    elseif id == 'Ack' then
-      printf('%s accepted your page.', sender)
-    elseif id == 'Nack' then
-      printf('%s rejected your page.', sender)
-    elseif not receiving[id] then -- new page incoming
-      receiving[id] = { name = body, data = {} }
-    elseif #body > 1 then -- append to page body
-      tinsert(receiving[id].data, body)
-    else -- page end
-    local page = { name = receiving[id].name, data = tconcat(receiving[id].data) }
-    receiving[id] = nil
-    local dialog = StaticPopup_Show('HackAccept', sender)
-    if dialog then
-      dialog.page = page
-      dialog.sender = sender
-    end
-  end
-end
+	COMM:SendCommMessage('REHack', '2ź'..page.name.."ź"..page.data, channel, name, 'BULK')
 end
 
 function RE:MakeESCable(frame,enable)

@@ -5,4 +5,7 @@
 ## Author: AcidWeb, Mud, Vandesdelca32
 ## SavedVariables: REHackDB
 
+Libs\LibStub\LibStub.lua
+Libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+Libs\AceComm-3.0\AceComm-3.0.xml
 Hack.xml
