@@ -1,0 +1,15 @@
+<Bindings>
+	<Binding name="Toggle Main Window" header="HACK"> Hack.Toggle() </Binding>
+        <!-- It's fucking ridiculous that we have to hardcode shit like this...
+             Come on, Blizz, give us a real binding API! -->
+	<Binding name="Run Page #1"> Hack.Run(1) </Binding>
+	<Binding name="Run Page #2"> Hack.Run(2) </Binding>
+	<Binding name="Run Page #3"> Hack.Run(3) </Binding>
+	<Binding name="Run Page #4"> Hack.Run(4) </Binding>
+	<Binding name="Run Page #5"> Hack.Run(5) </Binding>
+	<Binding name="Run Page #6"> Hack.Run(6) </Binding>
+	<Binding name="Run Page #7"> Hack.Run(7) </Binding>
+	<Binding name="Run Page #8"> Hack.Run(8) </Binding>
+	<Binding name="Run Page #9"> Hack.Run(9) </Binding>
+	<Binding name="Run Page #10"> Hack.Run(10) </Binding>
+</Bindings>

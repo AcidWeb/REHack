@@ -1,0 +1,549 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+ http://wowprogramming.com/FrameXML/UI.xsd">
+	<!--===================================
+   Templates
+   ====================================-->
+
+	<Button name='T_HackTooltipEnabled' virtual='true'>
+		<Scripts>
+			<OnEnter> Hack.Tooltip(self) </OnEnter>
+			<OnLeave> GameTooltip:Hide() </OnLeave>
+		</Scripts>
+	</Button>
+
+	<Button name='T_HackButton' inherits='T_HackTooltipEnabled' virtual='true'>
+		<Size>
+			<AbsDimension x='16' y='16'/>
+		</Size>
+		<HighlightTexture file="Interface\AddOns\Hack\Media\Buttons" alphaMode="ADD">
+			<TexCoords left=".875" right="1" top=".5" bottom=".625"/>
+		</HighlightTexture>
+		<Scripts>
+			<OnClick> Hack.OnButtonClick(self:GetName()) </OnClick>
+		</Scripts>
+	</Button>
+
+	<CheckButton name='T_HackCheckButton' inherits='OptionsCheckButtonTemplate,T_HackTooltipEnabled' virtual='true'>
+		<Size>
+			<AbsDimension x='16' y='16'/>
+		</Size>
+		<HitRectInsets>
+			<AbsInset left='0' right='0' top='0' bottom='0'/>
+		</HitRectInsets>
+	</CheckButton>
+
+	<CheckButton name='T_HackSearchCheck' inherits='T_HackCheckButton,T_HackButton' virtual='true'>
+		<Scripts>
+			<OnLoad> self:SetAlpha(.7) </OnLoad>
+			<OnClick> Hack.UpdateSearchContext() </OnClick>
+		</Scripts>
+	</CheckButton>
+
+	<Frame name='T_HackResizableFrame' virtual='true' movable='true' resizable='true' enableMouse='true' hidden='false'>
+		<Backdrop edgeFile='Interface\Addons\Hack\Media\Border' setAllPoint="true" tile='true'>
+			<BackgroundInsets>
+				<AbsInset left='3' right='3' top='3' bottom='3'/>
+			</BackgroundInsets>
+			<TileSize val='128' />
+			<EdgeSize val='14' />
+		</Backdrop>
+		<Layers>
+			<Layer level='BACKGROUND'>
+				<Texture name='$parentTitle'>
+					<!-- title bar -->
+					<Size y='22' />
+					<Color r='.1490' g='.1569' b='.1686'/>
+					<Anchors>
+						<Anchor point='TOPLEFT'>
+							<Offset>
+								<AbsDimension x='3' y='-3'/>
+							</Offset>
+						</Anchor>
+						<Anchor point='RIGHT'>
+							<Offset>
+								<AbsDimension x='-3'/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+				<!-- Background -->
+				<Texture name='$parentBG' file='Interface\Addons\Hack\Media\EditorTile' setAllPoint='true' vertTile='true' horizTile='true'>
+					<Anchors>
+						<Anchor point="TOPLEFT">
+							<Offset x="3" y='-3'/>
+						</Anchor>
+						<Anchor point="BOTTOMRIGHT">
+							<Offset x="-3" y="3" />
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name='$parentClose' inherits='UIPanelCloseButton'>
+				<Anchors>
+					<Anchor point='TOPRIGHT'>
+						<Offset>
+							<AbsDimension x='2' y='1'/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick> self:GetParent():Hide() </OnClick>
+				</Scripts>
+			</Button>
+			<Button>
+				<!-- resize grip -->
+				<Size>
+					<AbsDimension x='16' y='16'/>
+				</Size>
+				<Anchors>
+					<Anchor point='BOTTOMRIGHT'>
+						<Offset>
+							<AbsDimension x='4' y='-4'/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<NormalTexture    file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.75' right='1' top='.25' bottom='.5'/>
+				</NormalTexture>
+				<HighlightTexture file='Interface\AddOns\Hack\Media\Buttons' alphaMode='ADD'>
+					<TexCoords left='.75' right='1' top='.25' bottom='.5'/>
+				</HighlightTexture>
+				<Scripts>
+					<OnMouseDown> self:GetParent():StartSizing() </OnMouseDown>
+					<OnMouseUp> self:GetParent():StopMovingOrSizing() Hack.Snap() </OnMouseUp>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnMouseDown> self:StartMoving() </OnMouseDown>
+			<OnMouseUp>  self:StopMovingOrSizing() Hack.Snap() </OnMouseUp>
+		</Scripts>
+	</Frame>
+
+	<Button name='T_HackListItem' virtual='true'>
+		<Size>
+			<AbsDimension y='17'/>
+		</Size>
+		<Anchors>
+			<Anchor point='LEFT'  relativeTo='HackListScrollFrame'/>
+			<Anchor point='RIGHT' relativeTo='HackListScrollFrame' relativePoint='RIGHT'/>
+		</Anchors>
+		<HighlightTexture file='Interface\QuestFrame\UI-QuestTitleHighlight' alphaMode='ADD'/>
+		<Layers>
+			<Layer level='ARTWORK'>
+				<FontString name='$parentName' inherits='GameFontHighlightSmall' justifyH='LEFT'>
+					<Size>
+						<AbsDimension y='17'/>
+					</Size>
+					<Anchors>
+						<Anchor point='LEFT'>
+							<Offset>
+								<AbsDimension x='20'/>
+							</Offset>
+						</Anchor>
+						<Anchor point='RIGHT' relativePoint='RIGHT'/>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<CheckButton name='$parentAutorun' inherits='T_HackCheckButton,T_HackButton'>
+				<Anchors>
+					<Anchor point='LEFT'>
+						<Offset>
+							<AbsDimension x='2'/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<NormalTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='0' right='.125' top='0' bottom='.125'/>
+				</NormalTexture>
+				<PushedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.125' right='.25' top='0' bottom='.125'/>
+				</PushedTexture>
+				<CheckedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.25' right='.375' top='0' bottom='.125'/>
+				</CheckedTexture>
+				<Scripts>
+					<OnClick> Hack.OnListItemAutorunClicked( self:GetParent():GetID(), self:GetChecked()==true ) </OnClick>
+				</Scripts>
+			</CheckButton>
+			<EditBox name='$parentEdit' letters='100' autoFocus='false' hidden='true'>
+				<Anchors>
+					<Anchor point='TOPLEFT'     relativeTo='$parentName'/>
+					<Anchor point='BOTTOMRIGHT' relativeTo='$parentName' relativePoint='BOTTOMRIGHT' />
+				</Anchors>
+				<FontString inherits='GameFontHighlightSmall'/>
+				<Scripts>
+					<OnEditFocusLost>
+						self:Hide()
+						self:SetText('')
+						getglobal(self:GetParent():GetName()..'Name'):Show()
+					</OnEditFocusLost>
+					<OnEscapePressed>
+						self:ClearFocus()
+					</OnEscapePressed>
+					<OnEnterPressed>
+						Hack.FinishRename(self:GetText())
+						self:ClearFocus()
+					</OnEnterPressed>
+				</Scripts>
+			</EditBox>
+		</Frames>
+		<Scripts>
+			<OnClick> Hack.OnListItemClicked(self:GetID()) </OnClick>
+			<OnDoubleClick> Hack.Rename() </OnDoubleClick>
+		</Scripts>
+	</Button>
+
+	<!--===================================
+   List Frame
+   ====================================-->
+
+	<Frame name='HackListFrame' inherits='T_HackResizableFrame' toplevel='true' parent='UIParent' movable='true' enableMouse='true' hidden='true'>
+		<Size>
+			<AbsDimension x='322' y='382'/>
+		</Size>
+		<Anchors>
+			<Anchor point='TOPLEFT'>
+				<Offset>
+					<AbsDimension x='11' y='-115'/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Frames>
+			<Button name='HackNew' inherits='T_HackButton'>
+				<Anchors>
+					<Anchor point='TOPLEFT'>
+						<Offset>
+							<AbsDimension x='6' y='-7'/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<NormalTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.75' right='.875' top='.125' bottom='.25'/>
+				</NormalTexture>
+				<PushedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.875' right='1' top='.125' bottom='.25'/>
+				</PushedTexture>
+			</Button>
+			<Button name='HackDelete' inherits='T_HackButton'>
+				<Anchors>
+					<Anchor point='LEFT' relativeTo='HackNew' relativePoint='RIGHT'/>
+				</Anchors>
+				<NormalTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.375' right='.5' top='.375' bottom='.5'/>
+				</NormalTexture>
+				<PushedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.5' right='.625' top='.375' bottom='.5'/>
+				</PushedTexture>
+				<DisabledTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.625' right='.75' top='.375' bottom='.5'/>
+				</DisabledTexture>
+			</Button>
+			<Button name='HackRename' inherits='T_HackButton'>
+				<Anchors>
+					<Anchor point='LEFT' relativeTo='HackDelete' relativePoint='RIGHT'/>
+				</Anchors>
+				<NormalTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='0' right='.125' top='.375' bottom='.5'/>
+				</NormalTexture>
+				<PushedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.125' right='.25' top='.375' bottom='.5'/>
+				</PushedTexture>
+				<DisabledTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.25' right='.375' top='.375' bottom='.5'/>
+				</DisabledTexture>
+			</Button>
+			<Button name='HackMoveDown' inherits='T_HackButton'>
+				<Anchors>
+					<Anchor point='LEFT' relativeTo='HackRename' relativePoint='RIGHT'/>
+				</Anchors>
+				<NormalTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.375' right='.5' top='.25' bottom='.375'/>
+				</NormalTexture>
+				<PushedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.5' right='.625' top='.25' bottom='.375'/>
+				</PushedTexture>
+				<DisabledTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.625' right='.75' top='.25' bottom='.375'/>
+				</DisabledTexture>
+			</Button>
+			<Button name='HackMoveUp' inherits='T_HackButton'>
+				<Anchors>
+					<Anchor point='LEFT' relativeTo='HackMoveDown' relativePoint='RIGHT'/>
+				</Anchors>
+				<NormalTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='0' right='.125' top='.25' bottom='.375'/>
+				</NormalTexture>
+				<PushedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.125' right='.25' top='.25' bottom='.375'/>
+				</PushedTexture>
+				<DisabledTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.25' right='.375' top='.25' bottom='.375'/>
+				</DisabledTexture>
+			</Button>
+			<Button name='HackSend' inherits='T_HackButton'>
+				<Anchors>
+					<Anchor point='LEFT' relativeTo='HackMoveUp' relativePoint='RIGHT'/>
+				</Anchors>
+				<NormalTexture file="Interface\AddOns\Hack\Media\Buttons">
+					<TexCoords left=".375" right=".5" top=".5" bottom=".625"/>
+				</NormalTexture>
+				<PushedTexture file="Interface\AddOns\Hack\Media\Buttons">
+					<TexCoords left=".5" right=".625" top=".5" bottom=".625"/>
+				</PushedTexture>
+				<DisabledTexture file="Interface\AddOns\Hack\Media\Buttons">
+					<TexCoords left=".625" right=".75" top=".5" bottom=".625"/>
+				</DisabledTexture>
+			</Button>
+			<CheckButton name='HackSearchBody' inherits='T_HackSearchCheck'>
+				<Anchors>
+					<Anchor point='RIGHT' relativePoint='LEFT' relativeTo='HackListFrameClose'/>
+				</Anchors>
+			</CheckButton>
+			<CheckButton name='HackSearchName' inherits='T_HackSearchCheck' checked='true'>
+				<Anchors>
+					<Anchor point='RIGHT' relativePoint='LEFT' relativeTo='HackSearchBody'/>
+				</Anchors>
+			</CheckButton>
+			<EditBox name='HackSearchEdit' inherits='T_HackTooltipEnabled,InputBoxTemplate' letters='200' autoFocus='false' visible='true'>
+				<Size>
+					<AbsDimension y='10'/>
+				</Size>
+				<Anchors>
+					<Anchor point='TOPRIGHT' relativeTo='HackSearchName' relativePoint='TOPLEFT'>
+						<Offset>
+							<AbsDimension y='-2'/>
+						</Offset>
+					</Anchor>
+					<Anchor point='LEFT'                                 relativePoint='CENTER'>
+						<Offset>
+							<AbsDimension x='20'/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<FontString inherits='GameFontHighlightSmall'/>
+				<Scripts>
+					<OnLoad> self:SetAlpha(.8) </OnLoad>
+					<OnTextChanged> Hack.UpdateSearchContext() </OnTextChanged>
+					<OnEscapePressed> self:ClearFocus() </OnEscapePressed>
+					<OnEnterPressed> Hack.DoSearch(IsShiftKeyDown() and -1 or 1)  </OnEnterPressed>
+				</Scripts>
+			</EditBox>
+
+			<ScrollFrame name='HackListScrollFrame' inherits='FauxScrollFrameTemplate'>
+				<Anchors>
+					<Anchor point='TOPLEFT'>
+						<Offset>
+							<AbsDimension x='6' y='-29'/>
+						</Offset>
+					</Anchor>
+					<Anchor point='BOTTOM'>
+						<Offset>
+							<AbsDimension       y= '10'/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnVerticalScroll> FauxScrollFrame_OnVerticalScroll(self, offset, Hack.ListItemHeight, Hack.UpdateListItems) </OnVerticalScroll>
+				</Scripts>
+			</ScrollFrame>
+
+			<Button name='HackListItem1'  inherits='T_HackListItem' id= '1'>
+				<Anchors>
+					<Anchor point='TOP' relativeTo='HackListScrollFrame'/>
+				</Anchors>
+			</Button>
+			<!-- remaining list items are instantiated during OnLoad -->
+
+			<Button name='$parentTab1' inherits='CharacterFrameTabButtonTemplate' id='1' text='pages'>
+				<Anchors>
+					<Anchor point='CENTER' relativePoint='BOTTOMLEFT'>
+						<Offset>
+							<AbsDimension x='52' y='-13'/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick> PanelTemplates_SetTab(HackListFrame,1) Hack.SetMode('page') </OnClick>
+				</Scripts>
+			</Button>
+			<Button name='$parentTab2' inherits='CharacterFrameTabButtonTemplate' id='2' text='books'>
+				<Anchors>
+					<Anchor point='LEFT' relativeTo='$parentTab1' relativePoint='RIGHT'>
+						<Offset>
+							<AbsDimension x='-16' y='0'/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick> PanelTemplates_SetTab(HackListFrame,2) Hack.SetMode('book') </OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnEvent> Hack[event](self,event,...) </OnEvent>
+			<OnLoad>
+				Hack.OnLoad(self)
+				PanelTemplates_SetNumTabs(HackListFrame, 2)
+				PanelTemplates_SetTab(HackListFrame, 1)
+			</OnLoad>
+			<OnShow> PlaySound(SOUNDKIT.IG_SPELLBOOK_OPEN) </OnShow>
+			<OnHide> PlaySound(SOUNDKIT.IG_SPELLBOOK_CLOSE) </OnHide>
+		</Scripts>
+	</Frame>
+
+	<!--===================================
+   Editor Frame
+   ====================================-->
+
+	<Frame name='HackEditFrame' inherits='T_HackResizableFrame' parent='HackListFrame' toplevel='true' movable='true' resizable='true' enableMouse='true' hidden='false'>
+		<Size>
+			<AbsDimension x='509' y='382'/>
+		</Size>
+		<Anchors>
+			<Anchor point='TOPLEFT' relativePoint='TOPRIGHT' relativeTo='HackListFrame'>
+				<Offset>
+					<AbsDimension x='-2' y='0'/>
+				</Offset>
+			</Anchor>
+		</Anchors>
+		<Frames>
+			<ScrollFrame name='HackEditScrollFrame' inherits='UIPanelScrollFrameTemplate'>
+				<Anchors>
+					<Anchor point='TOPLEFT'>
+						<Offset>
+							<AbsDimension x=  '6' y='-29'/>
+						</Offset>
+					</Anchor>
+					<Anchor point='BOTTOMRIGHT'>
+						<Offset>
+							<AbsDimension x='-29' y= '10'/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<ScrollChild>
+					<EditBox name='HackEditBox' multiLine='true' nonspacewrap='true' spacing='1' autoFocus='false'>
+						<TextInsets>
+							<AbsInset left='5' right='40' top='4' bottom='9'/>
+						</TextInsets>
+						<Scripts>
+							<OnTextChanged>   ScrollingEdit_OnTextChanged(self, self:GetParent()) Hack.OnEditorTextChanged(self) </OnTextChanged>
+							<OnCursorChanged> ScrollingEdit_OnCursorChanged(self, x, y, w, h)                                    </OnCursorChanged>
+							<OnUpdate>        ScrollingEdit_OnUpdate(self, 0, self:GetParent())                                  </OnUpdate>
+							<OnEscapePressed> self:ClearFocus()                                                                  </OnEscapePressed>
+							<OnTabPressed>    if IsShiftKeyDown() then Hack.Run() else HackEditBox:Insert(Hack.tab) end   </OnTabPressed>
+						</Scripts>
+						<FontString inherits='GameFontHighlight'/>
+					</EditBox>
+				</ScrollChild>
+				<!--
+            <Frames>
+               <Button setAllPoints='true'>
+                  <Scripts> <OnClick> HackEditBox:SetFocus() </OnClick> </Scripts>
+               </Button>
+            </Frames>
+				-->
+			</ScrollFrame>
+			<Button name='HackFontCycle' inherits='T_HackButton'>
+				<Anchors>
+					<Anchor point='RIGHT' relativeTo='HackEditFrameClose' relativePoint='LEFT'/>
+				</Anchors>
+				<NormalTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.5' right='.625' top='.125' bottom='.25'/>
+				</NormalTexture>
+				<PushedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.625' right='.75' top='.125' bottom='.25'/>
+				</PushedTexture>
+			</Button>
+			<Button name='HackFontBigger' inherits='T_HackButton'>
+				<Anchors>
+					<Anchor point='RIGHT' relativeTo='HackFontCycle' relativePoint='LEFT'/>
+				</Anchors>
+				<NormalTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='0' right='.125' top='.125' bottom='.25'/>
+				</NormalTexture>
+				<PushedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.125' right='.25' top='.125' bottom='.25'/>
+				</PushedTexture>
+			</Button>
+			<Button name='HackFontSmaller' inherits='T_HackButton'>
+				<Anchors>
+					<Anchor point='RIGHT' relativeTo='HackFontBigger' relativePoint='LEFT'/>
+				</Anchors>
+				<NormalTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.25' right='.375' top='.125' bottom='.25'/>
+				</NormalTexture>
+				<PushedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.375' right='.5' top='.125' bottom='.25'/>
+				</PushedTexture>
+			</Button>
+			<CheckButton name='HackColorize' inherits='T_HackCheckButton,T_HackButton'>
+				<Anchors>
+					<Anchor point='RIGHT' relativeTo='HackFontSmaller' relativePoint='LEFT'/>
+				</Anchors>
+				<NormalTexture file="Interface\AddOns\Hack\Media\Buttons">
+					<TexCoords left="0" right=".125" top=".625" bottom=".75"/>
+				</NormalTexture>
+				<PushedTexture file="Interface\AddOns\Hack\Media\Buttons">
+					<TexCoords left=".125" right=".25" top=".625" bottom=".75"/>
+				</PushedTexture>
+				<CheckedTexture file="Interface\AddOns\Hack\Media\Buttons">
+					<TexCoords left=".25" right=".375" top=".625" bottom=".75"/>
+				</CheckedTexture>
+			</CheckButton>
+			<CheckButton name='HackSnap' inherits='T_HackCheckButton,T_HackButton'>
+				<Anchors>
+					<Anchor point='TOPLEFT'>
+						<Offset>
+							<AbsDimension x='8' y='-6'/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<NormalTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='0' right='.125' top='.5' bottom='.625'/>
+				</NormalTexture>
+				<PushedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.125' right='.25' top='.5' bottom='.625'/>
+				</PushedTexture>
+				<CheckedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.25' right='.375' top='.5' bottom='.625'/>
+				</CheckedTexture>
+			</CheckButton>
+			<Button name='HackRun' inherits='T_HackButton'>
+				<Anchors>
+					<Anchor point='LEFT' relativeTo='HackSnap' relativePoint='RIGHT'/>
+				</Anchors>
+				<NormalTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.375' right='.5' top='0' bottom='.125'/>
+				</NormalTexture>
+				<PushedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.5' right='.625' top='0' bottom='.125'/>
+				</PushedTexture>
+			</Button>
+			<Button name='HackRevert' inherits='T_HackButton'>
+				<Anchors>
+					<Anchor point='LEFT' relativeTo='HackRun' relativePoint='RIGHT'/>
+				</Anchors>
+				<NormalTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.625' right='.75' top='0' bottom='.125'/>
+				</NormalTexture>
+				<PushedTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.75' right='.875' top='0' bottom='.125'/>
+				</PushedTexture>
+				<DisabledTexture file='Interface\AddOns\Hack\Media\Buttons'>
+					<TexCoords left='.875' right='1' top='0' bottom='.125'/>
+				</DisabledTexture>
+			</Button>
+		</Frames>
+		<Scripts>
+			<OnLoad> Hack.OnEditorLoad(self) </OnLoad>
+			<OnShow> Hack.OnEditorShow() </OnShow>
+			<OnHide> Hack.OnEditorHide() </OnHide>
+			<OnSizeChanged> HackEditBox:SetWidth(HackEditFrame:GetWidth()) </OnSizeChanged>
+		</Scripts>
+	</Frame>
+</Ui>
