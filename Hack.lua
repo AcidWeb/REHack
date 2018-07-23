@@ -1,599 +1,650 @@
---------------------------------------------------------------------------------
--- Hack. Notebook addon. Eric Tetz <erictetz@gmail.com> 2008
---------------------------------------------------------------------------------
+local _G = _G
+local _, RE = ...
+_G.REHack = RE
 
-HackDB = { -- default settings saved variables
-   font = 2,
-   fontsize = 11,
-   snap = 1,
-   book = 1,
-   books = { { name = 'empty book', data = { } }, },
+-- UIDropDownMenu taint workaround by foxlit
+if (UIDROPDOWNMENU_VALUE_PATCH_VERSION or 0) < 2 then
+	UIDROPDOWNMENU_VALUE_PATCH_VERSION = 2
+	hooksecurefunc("UIDropDownMenu_InitializeHelper", function()
+		if UIDROPDOWNMENU_VALUE_PATCH_VERSION ~= 2 then
+			return
+		end
+		for i=1, UIDROPDOWNMENU_MAXLEVELS do
+			for j=1, UIDROPDOWNMENU_MAXBUTTONS do
+				local b = _G["DropDownList" .. i .. "Button" .. j]
+				if not (issecurevariable(b, "value") or b:IsShown()) then
+					b.value = nil
+					repeat
+						j, b["fx" .. j] = j+1
+					until issecurevariable(b, "value")
+				end
+			end
+		end
+	end)
+end
+if (UIDROPDOWNMENU_OPEN_PATCH_VERSION or 0) < 1 then
+	UIDROPDOWNMENU_OPEN_PATCH_VERSION = 1
+	hooksecurefunc("UIDropDownMenu_InitializeHelper", function(frame)
+		if UIDROPDOWNMENU_OPEN_PATCH_VERSION ~= 1 then
+			return
+		end
+		if UIDROPDOWNMENU_OPEN_MENU and UIDROPDOWNMENU_OPEN_MENU ~= frame
+		   and not issecurevariable(UIDROPDOWNMENU_OPEN_MENU, "displayMode") then
+			UIDROPDOWNMENU_OPEN_MENU = nil
+			local t, f, prefix, i = _G, issecurevariable, " \0", 1
+			repeat
+				i, t[prefix .. i] = i + 1
+			until f("UIDROPDOWNMENU_OPEN_MENU")
+		end
+	end)
+end
+
+-- GLOBALS: LE_PARTY_CATEGORY_HOME, UIDROPDOWNMENU_VALUE_PATCH_VERSION, UIDROPDOWNMENU_MAXLEVELS, UIDROPDOWNMENU_MAXBUTTONS, UIDROPDOWNMENU_OPEN_PATCH_VERSION, UIDROPDOWNMENU_OPEN_MENU, issecurevariable, hooksecurefunc
+local select, pairs, format, getglobal, loadstring, type, pcall, gsub, date, strmatch, time = _G.select, _G.pairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.date, _G.strmatch, _G.time
+local mmin, mfloor = _G.math.min, _G.math.floor
+local tinsert, tremove, tconcat = _G.table.insert, _G.table.remove, _G.table.concat
+local CreateFrame = _G.CreateFrame
+local EasyMenu = _G.EasyMenu
+local StaticPopup_Show = _G.StaticPopup_Show
+local PlaySound = _G.PlaySound
+local IsShiftKeyDown = _G.IsShiftKeyDown
+local IsInGuild = _G.IsInGuild
+local UnitName = _G.UnitName
+local UnitInRaid = _G.UnitInRaid
+local GetNumGroupMembers = _G.GetNumGroupMembers
+local SendAddonMessage = _G.C_ChatInfo.SendAddonMessage
+local RegisterAddonMessagePrefix = _G.C_ChatInfo.RegisterAddonMessagePrefix
+local FauxScrollFrame_Update = _G.FauxScrollFrame_Update
+local FauxScrollFrame_GetOffset = _G.FauxScrollFrame_GetOffset
+local FauxScrollFrame_SetOffset = _G.FauxScrollFrame_SetOffset
+
+_G.REHackDB = { -- default settings saved variables
+  font = 1,
+  fontsize = 16,
+  snap = 1,
+  book = 1,
+  books = {{name = 'Default', data = {}}},
 }
 
-Hack = {
-   tooltips = {
-      HackNew         = 'Create new %s',
-      HackDelete      = 'Delete this %s\nSHIFT to skip confirmation prompt',
-      HackRename      = 'Rename this %s',
-      HackMoveUp      = 'Move this %s up in the list\nSHIFT to move in increments of 5',
-      HackMoveDown    = 'Move this %s down in the list\nSHIFT to move in increments of 5',
-      HackAutorun     = 'Run this page automatically when Hack loads',
-      HackRun         = 'Run this page',
-      HackSend        = 'Send this page to another Hack user',
-      HackSnap        = 'Attach editor to list window',
-      HackEditClose   = 'Close editor for this page',
-      HackFontCycle   = 'Cycle through available fonts',
-      HackFontBigger  = 'Increase font size',
-      HackFontSmaller = 'Decrease font size',
-      HackRevert      = 'Revert to saved version of this page',
-      HackColorize    = 'Enable Lua syntax highlighting for this page',
-      HackSearchEdit  = 'Find %ss matching this text\nENTER to search forward\nSHIFT+ENTER to search backwards',
-      HackSearchName  = 'Search %s name',
-      HackSearchBody  = 'Search page text',
-   },
-   fonts = {
-      'Interface\\AddOns\\Hack\\Media\\VeraMono.ttf',
-      'Fonts\\FRIZQT__.TTF',
-      'Fonts\\ARIALN.TTF',
-   },
-   tab = '    ',
-   ListItemHeight =  17, -- used in the XML, too
-   ListVOffset    =  37, -- vertical space not available for list items
-   MinHeight      = 141, -- scroll bar gets wonky if we let the window get too short
-   MinWidth       = 296, -- keep buttons from crowding/overlapping
-   MaxWidth       = 572, -- tune to match size of 200 character page name
-   MaxVisible     =  50, -- num visible without scrolling; limits num HackListItems we must create
-   NumVisible     =   0, -- calculated during list resize
+RE.Tooltips = {
+  HackNew         = 'Create new %s',
+  HackDelete      = 'Delete this %s\nSHIFT to skip confirmation prompt',
+  HackRename      = 'Rename this %s',
+  HackMoveUp      = 'Move this %s up in the list\nSHIFT to move in increments of 5',
+  HackMoveDown    = 'Move this %s down in the list\nSHIFT to move in increments of 5',
+  HackAutorun     = 'Run this page automatically when REHack loads',
+  HackRun         = 'Run this page',
+  HackSend        = 'Send this page to another REHack user',
+  HackSnap        = 'Attach editor to list window',
+  HackEditClose   = 'Close editor for this page',
+  HackFontCycle   = 'Cycle through available fonts',
+  HackFontBigger  = 'Increase font size',
+  HackFontSmaller = 'Decrease font size',
+  HackRevert      = 'Revert to saved version of this page',
+  HackColorize    = 'Enable Lua syntax highlighting for this page',
+  HackSearchEdit  = 'Find %ss matching this text\nENTER to search forward\nSHIFT+ENTER to search backwards',
+  HackSearchName  = 'Search %s name',
+  HackSearchBody  = 'Search page text',
 }
+RE.fonts = {
+  'Interface\\AddOns\\REHack\\Media\\VeraMono.ttf',
+  'Interface\\AddOns\\REHack\\Media\\SourceCodePro.ttf',
+}
+RE.Tab						=	'     '
+RE.Indent         =	{}
+RE.ListItemHeight =	17 -- used in the XML, too
+RE.ListVOffset    =	37 -- vertical space not available for list items
+RE.MinHeight      =	141 -- scroll bar gets wonky if we let the window get too short
+RE.MinWidth       =	296 -- keep buttons from crowding/overlapping
+RE.MaxWidth       =	572 -- tune to match size of 200 character page name
+RE.MaxVisible     =	50 -- num visible without scrolling; limits num HackListItems we must create
+RE.NumVisible     =	0 -- calculated during list resize
+RE.PlayerName 		=	UnitName("PLAYER")
 
-BINDING_HEADER_HACK = 'Hack'  -- used by binding system
-
-local PLAYERNAME = UnitName('player')
+_G.BINDING_HEADER_HACK = 'REHack'
 
 StaticPopupDialogs.HackAccept = {
-   text = 'Accept new Hack page from %s?', button1 = 'Yes', button2 = 'No',
-   timeout = 0, whileDead = 1, hideOnEscape = 1,
-   OnAccept = function(self)
-      Hack.New(self.page)
-      SendAddonMessage('HackAck', PLAYERNAME, 'WHISPER', self.sender)
-   end,
-   OnCancel = function(self)
-      SendAddonMessage('HackNack', PLAYERNAME, 'WHISPER', self.sender)
-   end,
+  text = 'Accept new REHack page from %s?', button1 = 'Yes', button2 = 'No',
+  timeout = 0, whileDead = 1, hideOnEscape = 1,
+  OnAccept = function(self)
+    RE:New(self.page)
+    SendAddonMessage('HackAck', RE.PlayerName, 'WHISPER', self.sender)
+  end,
+  OnCancel = function(self)
+    SendAddonMessage('HackNack', RE.PlayerName, 'WHISPER', self.sender)
+  end,
 }
 
 StaticPopupDialogs.HackSendTo = {
-   text = 'Send selected page to', button1 = 'OK', button2 = 'CANCEL',
-   hasEditBox = 1, timeout = 0, whileDead = 1, hideOnEscape = 1,
-   OnAccept = function(self)
-      --XXX local name = getglobal(this:GetParent():GetName()..'EditBox'):GetText()
-      local name = self.editBox:GetText()
-      if name == '' then return true end
-      Hack.SendPage(self.page, 'WHISPER', name)
-   end
+  text = 'Send selected page to', button1 = 'OK', button2 = 'CANCEL',
+  hasEditBox = 1, timeout = 0, whileDead = 1, hideOnEscape = 1,
+  OnAccept = function(self)
+    local name = self.editBox:GetText()
+    if name == '' then return true end
+    RE:SendPage(self.page, 'WHISPER', name)
+  end
 }
 
-StaticPopupDialogs.HackDelete = {
-   text = 'Delete selected %s?', button1 = 'Yes', button2 = 'No',
-   timeout = 0, whileDead = 1, hideOnEscape = 1,
-   OnAccept = function()
-      Hack.DeleteSelected()
-   end
+StaticPopupDialogs.REHackDelete = {
+  text = 'Delete selected %s?', button1 = 'Yes', button2 = 'No',
+  timeout = 0, whileDead = 1, hideOnEscape = 1,
+  OnAccept = function()
+    RE:DeleteSelected()
+  end
 }
 
-local db -- alias for HackDB
-local items -- alias for HackDB.books[HackDB.book].data
+local db -- alias for REHackDB
+local items -- alias for REHackDB.books[REHackDB.book].data
 local mode = 'page' -- 'page' or 'book'
 local selected = nil -- index of selected list item
 
-local function printf(...) DEFAULT_CHAT_FRAME:AddMessage('|cffff6600<Hack>: '..format(...)) end
+local function printf(...) _G.DEFAULT_CHAT_FRAME:AddMessage('|cffff6600<REHack>: '..format(...)) end
 local function getobj(...) return getglobal(format(...)) end
-local function enableButton(b,e) if e then HackNew.Enable(b) else HackNew.Disable(b) end end
+local function enableButton(b,e) if e then _G.HackNew.Enable(b) else _G.HackNew.Disable(b) end end
 
-function Hack.Find(pattern) -- search books for a page by name
-   for _,book in pairs(HackDB.books) do
-      for _,page in pairs(book.data) do
-         if page.name:match(pattern) then
-            return page
-         end
+function RE:Find(pattern) -- search books for a page by name
+  for _, book in pairs(_G.REHackDB.books) do
+    for _, page in pairs(book.data) do
+      if page.name:match(pattern) then
+        return page
       end
-   end
+    end
+  end
 end
 
-function Hack.ScriptError(type, err)
-   local name, line, msg = err:match('%[string (".-")%]:(%d+): (.*)')
-   printf( '%s error%s:\n %s', type,
-          name and format(' in %s at line %d', name, line, msg) or '',
-          err )
+function RE:ScriptError(type, err)
+  local name, line, msg = err:match('%[string (".-")%]:(%d+): (.*)')
+  printf('%s error%s:\n %s', type,
+  name and format(' in %s at line %d', name, line, msg) or '',
+  err)
 end
 
-function Hack.Compile(page)
-   local func, err = loadstring(page.data:gsub('||','|'), page.name)
-   if not func then Hack.ScriptError('syntax', err) return end
-   return func
+function RE:Compile(page)
+  local func, err = loadstring(page.data:gsub('||','|'), page.name)
+  if not func then RE:ScriptError('syntax', err) return end
+  return func
 end
 
 -- find page by index or name and return it as a compiled function
-function Hack.Get(index)
-   local page = type(index)=='string' and Hack.Find(index) or items[index]
-   if not page then printf('attempt to get an invalid page') return end
-   return Hack.Compile(page)
+function RE:Get(index)
+  local page = type(index)=='string' and RE:Find(index) or items[index]
+  if not page then printf('attempt to get an invalid page') return end
+  return RE:Compile(page)
 end
 
--- avoids need to create a table to capture return values in Hack.Execute
+-- avoids need to create a table to capture return values in RE.Execute
 local function CheckResult(...)
-   if ... then return select(2,...) end
-   Hack.ScriptError('runtime', select(2,...))
+  if ... then return select(2,...) end
+  RE:ScriptError('runtime', select(2,...))
 end
 
-function Hack.Execute(func, ...)
-   if func then return CheckResult( pcall(func, ...) ) end
+function RE:Execute(func, ...)
+  if func then return CheckResult(pcall(func, ...)) end
 end
 
-function Hack.Run(index, ...)
-   return Hack.Execute( Hack.Get(index or selected), ... )
+function RE:Run(index, ...)
+  return RE:Execute(RE:Get(index or selected), ...)
 end
 
 do
-   local loaded = {}
-   -- similar to Lua 'require': loads a page if not already loaded
-   function Hack.Require(name)
-      if not loaded[name] then
-         loaded[name] = true
-         Hack.Run(name)
-      end
-   end
+  local loaded = {}
+  -- similar to Lua 'require': loads a page if not already loaded
+  function RE:Require(name)
+    if not loaded[name] then
+      loaded[name] = true
+      RE:Run(name)
+    end
+  end
 end
 
-function Hack.DoAutorun()
-   for i,book in pairs(HackDB.books) do
-      for i,page in pairs(book.data) do
-         if page.autorun then
-            Hack.Execute( Hack.Compile(page) )
-         end
+function RE:DoAutorun()
+  for _, book in pairs(_G.REHackDB.books) do
+    for _, page in pairs(book.data) do
+      if page.autorun then
+        RE:Execute(RE:Compile(page))
       end
-   end
+    end
+  end
 end
 
-function Hack.OnLoad(self)
-   -- instantiate list items
-   local name = 'HackListItem'
-   for i=2,Hack.MaxVisible do
-      local li = CreateFrame('Button', name..i, HackListFrame, 'T_HackListItem')
-      li:SetPoint('TOP', name..(i-1), 'BOTTOM')
-      li:SetID(i)
-   end
+function RE:OnLoad(self)
+  -- instantiate list items
+  local name = 'HackListItem'
+  for i=2, RE.MaxVisible do
+    local li = CreateFrame('Button', name..i, _G.HackListFrame, 'T_HackListItem')
+    li:SetPoint('TOP', name..(i-1), 'BOTTOM')
+    li:SetID(i)
+  end
 
-   -- users can delete HackExamples.lua to avoid loading them
-   if HackExamples then
-      table.insert( HackDB.books, 1, HackExamples.examplebook )
-      setmetatable( HackExamples, { __mode='kv' } ) -- let examplebook be collected
-   end
+  self:RegisterEvent('VARIABLES_LOADED')
+  self:RegisterEvent('CHAT_MSG_ADDON')
 
-   self:RegisterEvent('VARIABLES_LOADED')
-   self:RegisterEvent('CHAT_MSG_ADDON')
+  -- Addon message prefixes
+  RegisterAddonMessagePrefix("Hack1")
+  RegisterAddonMessagePrefix("Hack2")
+  RegisterAddonMessagePrefix("HackAck")
+  RegisterAddonMessagePrefix("HackNack")
 
-   -- Addon message prefixes
-   RegisterAddonMessagePrefix("Hack1")
-   RegisterAddonMessagePrefix("Hack2")
-   RegisterAddonMessagePrefix("HackAck")
-   RegisterAddonMessagePrefix("HackNack")
+  _G.SLASH_HACKSLASH1 = '/hack'
+  _G.SlashCmdList['HACKSLASH'] =
+  function(name)
+    if name == '' then
+      RE:Toggle()
+    else
+      RE:Run(name)
+    end
+  end
 
-   SLASH_HACKSLASH1 = '/hack'
-   SlashCmdList['HACKSLASH'] =
-      function(name)
-         if name == '' then
-            Hack.Toggle()
-         else
-            Hack.Run(name)
-         end
-      end
-
-   printf('Loaded. /hack to toggle')
+  --[[local AS = unpack(AddOnSkins)
+  AS:SkinFrame(HackListFrame)
+  AS:SkinFrame(HackEditFrame)
+  AS:SkinCloseButton(HackListFrameClose)
+  AS:SkinCloseButton(HackEditFrameClose)
+  AS:SkinCheckBox(HackSearchName)
+  AS:SkinCheckBox(HackSearchBody)
+  AS:SkinEditBox(HackSearchEdit)
+  AS:SkinScrollBar(HackEditScrollFrameScrollBar)
+  AS:SkinTab(HackListFrameTab1)
+  AS:SkinTab(HackListFrameTab2)]]--
 end
 
-function Hack.VARIABLES_LOADED(self)
-   db = HackDB
-   items = db.books[db.book].data
-   Hack.UpdateFont()
-   Hack.UpdateButtons()
-   Hack.UpdateSearchContext()
-   HackSnap:SetChecked(HackDB.snap)
-   Hack.Snap()
-   if not HackIndent then HackColorize:Hide() end
-   self:SetMaxResize(Hack.MaxWidth, (Hack.MaxVisible * Hack.ListItemHeight) + Hack.ListVOffset + 5)
-   self:SetMinResize(Hack.MinWidth, Hack.MinHeight)
-   HackListFrame:SetScript('OnSizeChanged', Hack.UpdateNumListItemsVisible)
-   Hack.UpdateNumListItemsVisible()
-   Hack.DoAutorun()
+function RE:VARIABLES_LOADED(_)
+  db = _G.REHackDB
+  items = db.books[db.book].data
+  RE:UpdateFont()
+  RE:UpdateButtons()
+  RE:UpdateSearchContext()
+  _G.HackSnap:SetChecked(_G.REHackDB.snap)
+  RE:Snap()
+  _G.HackListFrame:SetMaxResize(RE.MaxWidth, (RE.MaxVisible * RE.ListItemHeight) + RE.ListVOffset + 5)
+  _G.HackListFrame:SetMinResize(RE.MinWidth, RE.MinHeight)
+  _G.HackListFrame:SetScript('OnSizeChanged', RE.UpdateNumListItemsVisible)
+  RE:UpdateNumListItemsVisible()
+  RE:DoAutorun()
 end
 
 -- switch between viewing books vs pages
-function Hack.SetMode(newmode)
-   mode = newmode
-   if mode == 'page' then
-      db.book = math.min(db.book, #db.books)
-      items = db.books[db.book].data
-      selected = nil
-      HackSearchBody:Show()
-      HackSend:Show()
-   else -- 'book'
-      items = db.books
-      selected = db.book
-      HackSearchBody:Hide()
-      HackEditFrame:Hide()
-      HackSend:Hide()
-   end
-   Hack.UpdateButtons()
-   Hack.UpdateListItems()
+function RE:SetMode(newmode)
+  mode = newmode
+  if mode == 'page' then
+    db.book = mmin(db.book, #db.books)
+    items = db.books[db.book].data
+    selected = nil
+    _G.HackSearchBody:Show()
+    _G.HackSend:Show()
+  else -- 'book'
+    items = db.books
+    selected = db.book
+    _G.HackSearchBody:Hide()
+    _G.HackEditFrame:Hide()
+    _G.HackSend:Hide()
+  end
+  RE:UpdateButtons()
+  RE:UpdateListItems()
 end
 
-function Hack.SelectListItem(index)
-   selected = index
-   Hack.UpdateButtons()
-   if mode == 'page' then
-      Hack.EditPage()
-   else -- 'book'
-      db.book = index
-   end
+function RE:SelectListItem(index)
+  selected = index
+  RE:UpdateButtons()
+  if mode == 'page' then
+    RE:EditPage()
+  else -- 'book'
+    db.book = index
+  end
 end
 
 local function ListItemClickCommon(id, op)
-   PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
-   op(id + FauxScrollFrame_GetOffset(HackListScrollFrame))
-   Hack.UpdateListItems()
+  PlaySound(_G.SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
+  op(nil, id + FauxScrollFrame_GetOffset(_G.HackListScrollFrame))
+  RE:UpdateListItems()
 end
 
-function Hack.OnListItemClicked(id)
-   ListItemClickCommon(id, Hack.SelectListItem)
+function RE:OnListItemClicked(id)
+  ListItemClickCommon(id, RE.SelectListItem)
 end
 
-function Hack.OnListItemAutorunClicked(id, enable)
-   ListItemClickCommon(id, function(selected) items[selected].autorun = enable end)
+function RE:OnListItemAutorunClicked(id, enable)
+  ListItemClickCommon(id, function(_, selected) items[selected].autorun = enable end)
 end
 
-function Hack.UpdateNumListItemsVisible()
-   local visible = math.floor( (HackListFrame:GetHeight()-Hack.ListVOffset) / Hack.ListItemHeight )
-   Hack.NumVisible = math.min( Hack.MaxVisible, visible )
-   Hack.UpdateListItems()
+function RE:UpdateNumListItemsVisible()
+  local visible = mfloor((_G.HackListFrame:GetHeight()-RE.ListVOffset) / RE.ListItemHeight)
+  RE.NumVisible = mmin(RE.MaxVisible, visible)
+  RE:UpdateListItems()
 end
 
-function Hack.UpdateListItems()
-   local scrollFrameWidth = HackListFrame:GetWidth() - 18 -- N = inset from right edge
-   FauxScrollFrame_Update(HackListScrollFrame, #items, Hack.NumVisible, Hack.ListItemHeight,
-      nil, nil, nil, HackListScrollFrame, scrollFrameWidth-17, scrollFrameWidth) -- N = room for scrollbar
-   local offset = FauxScrollFrame_GetOffset(HackListScrollFrame)
-   for widgetIndex=1, Hack.MaxVisible do
-      local itemIndex = offset + widgetIndex
-      local item = items[itemIndex]
-      local widget = getobj('HackListItem%d', widgetIndex)
-      if not item or widgetIndex > Hack.NumVisible then
-         widget:Hide()
-      else
-         widget:Show()
-         local name = getobj('HackListItem%dName', widgetIndex)
-         local edit = getobj('HackListItem%dEdit', widgetIndex)
-         local auto = getobj('HackListItem%dAutorun', widgetIndex)
-         edit:ClearFocus() -- in case someone tries to scroll while renaming
-         if Hack.SearchMatch(item) then
-            name:SetTextColor(1,1,1) else name:SetTextColor(.3,.3,.3) end
-         if itemIndex == selected then
-            widget:LockHighlight() else widget:UnlockHighlight() end
-         if mode == 'page' then
+function RE:UpdateListItems()
+  local scrollFrameWidth = _G.HackListFrame:GetWidth() - 18 -- N = inset from right edge
+  FauxScrollFrame_Update(_G.HackListScrollFrame, #items, RE.NumVisible, RE.ListItemHeight,
+  nil, nil, nil, _G.HackListScrollFrame, scrollFrameWidth-17, scrollFrameWidth) -- N = room for scrollbar
+  local offset = FauxScrollFrame_GetOffset(_G.HackListScrollFrame)
+  for widgetIndex=1, RE.MaxVisible do
+    local itemIndex = offset + widgetIndex
+    local item = items[itemIndex]
+    local widget = getobj('HackListItem%d', widgetIndex)
+    if not item or widgetIndex > RE.NumVisible then
+      widget:Hide()
+    else
+      widget:Show()
+      local name = getobj('HackListItem%dName', widgetIndex)
+      local edit = getobj('HackListItem%dEdit', widgetIndex)
+      local auto = getobj('HackListItem%dAutorun', widgetIndex)
+      edit:ClearFocus() -- in case someone tries to scroll while renaming
+      if RE:SearchMatch(item) then
+        name:SetTextColor(1, 1, 1) else name:SetTextColor(.3, .3, .3) end
+        if itemIndex == selected then
+          widget:LockHighlight() else widget:UnlockHighlight() end
+          if mode == 'page' then
             auto:Show()
             name:SetText(item.name)
             auto:SetChecked(item.autorun)
-         else
+          else
             auto:Hide()
             name:SetText(format('%s |cFF888888(%d pages)', item.name, #item.data))
-         end
+          end
+        end
       end
-   end
-end
+    end
 
-function Hack.UpdateButtons()
-   enableButton( HackDelete,   selected )
-   enableButton( HackRename,   selected )
-   enableButton( HackSend,     selected )
-   enableButton( HackMoveUp,   selected and selected > 1 )
-   enableButton( HackMoveDown, selected and selected < #items )
-end
+    function RE:UpdateButtons()
+      enableButton(_G.HackDelete, selected)
+      enableButton(_G.HackRename, selected)
+      enableButton(_G.HackSend, selected)
+      enableButton(_G.HackMoveUp, selected and selected > 1)
+      enableButton(_G.HackMoveDown, selected and selected < #items)
+    end
 
-function Hack.UpdateSearchContext()
-   local pattern = HackSearchEdit:GetText()
+    function RE:UpdateSearchContext()
+      local pattern = _G.HackSearchEdit:GetText()
       :gsub('[%[%]%%()]', '%%%1') -- escape magic chars (the price we pay for real-time filtering)
       :gsub('%a', function(c) return format('[%s%s]', c:lower(), c:upper()) end) -- case insensitive
-   local nx, bx = HackSearchName:GetChecked(), HackSearchBody:GetChecked()
-   function Hack.SearchMatch(item)
-      return not (nx or bx)
-             or (                   nx and item.name:match(pattern))
-             or (mode == 'page' and bx and item.data:match(pattern))
-   end
-   Hack.UpdateListItems()
-end
-
-function Hack.DoSearch(direction) -- 1=down, -1=up
-   if #items == 0 then return end
-   local start = selected or 1
-   local it = start
-   repeat
-      it = it + direction
-      if     it > #items then it = 1 -- wrap at..
-      elseif it < 1 then it = #items --   ..either end
+      local nx, bx = _G.HackSearchName:GetChecked(), _G.HackSearchBody:GetChecked()
+      function RE:SearchMatch(item)
+        return not (nx or bx)
+        or (nx and item.name:match(pattern))
+        or (mode == 'page' and bx and item.data:match(pattern))
       end
-      if Hack.SearchMatch(items[it]) then
-         Hack.SelectListItem(it)
-         Hack.ScrollSelectedIntoView()
-         HackSearchEdit:SetFocus()
-         break
+      RE:UpdateListItems()
+    end
+
+    function RE:DoSearch(direction) -- 1=down, -1=up
+      if #items == 0 then return end
+      local start = selected or 1
+      local it = start
+      repeat
+        it = it + direction
+        if it > #items then it = 1 -- wrap at..
+        elseif it < 1 then it = #items -- ..either end
       end
-   until it == start
-end
+      if RE:SearchMatch(items[it]) then
+        RE:SelectListItem(it)
+        RE:ScrollSelectedIntoView()
+        _G.HackSearchEdit:SetFocus()
+        break
+      end
+    until it == start
+  end
 
-function Hack.ScrollSelectedIntoView()
-   local offset = FauxScrollFrame_GetOffset(HackListScrollFrame)
-   local id = selected - offset
-   if     id >  Hack.NumVisible then offset = selected-Hack.NumVisible
-   elseif id <= 0                then offset = selected-1 end
-   FauxScrollFrame_SetOffset(HackListScrollFrame, offset)
-   HackListScrollFrameScrollBar:SetValue(offset * Hack.ListItemHeight)
-   Hack.UpdateListItems()
-end
+  function RE:ScrollSelectedIntoView()
+    local offset = FauxScrollFrame_GetOffset(_G.HackListScrollFrame)
+    local id = selected - offset
+    if id >  RE.NumVisible then offset = selected - RE.NumVisible
+    elseif id <= 0 then offset = selected-1 end
+    FauxScrollFrame_SetOffset(_G.HackListScrollFrame, offset)
+    _G.HackListScrollFrameScrollBar:SetValue(offset * RE.ListItemHeight)
+    RE:UpdateListItems()
+  end
 
-function Hack.Toggle(msg)
-   if HackListFrame:IsVisible() then
-      HackListFrame:Hide()
-   else
-      HackListFrame:Show()
-   end
-end
+  function RE:Toggle(_)
+    if _G.HackListFrame:IsVisible() then
+      _G.HackListFrame:Hide()
+    else
+      _G.HackListFrame:Show()
+    end
+  end
 
-function Hack.Tooltip(self)
-   local which = self:GetName()
-   local tip = which:match('Autorun')
-      and 'Automatically run this page when Hack loads'
-      or format(Hack.tooltips[which], mode)
-   GameTooltip:SetOwner(self, 'ANCHOR_RIGHT')
-   GameTooltip:AddLine(tip)
-   GameTooltip:Show()
-end
+  function RE:Tooltip(self)
+    local which = self:GetName()
+    local tip = which:match('Autorun')
+    and 'Automatically run this page when Hack loads'
+    or format(RE.Tooltips[which], mode)
+    _G.GameTooltip:SetOwner(self, 'ANCHOR_RIGHT')
+    _G.GameTooltip:AddLine(tip)
+    _G.GameTooltip:Show()
+  end
 
-function Hack.Rename()
-   local id = selected - FauxScrollFrame_GetOffset(HackListScrollFrame)
-   local name = getobj("HackListItem%dName", id)
-   local edit = getobj("HackListItem%dEdit", id)
-   edit:SetText( items[selected].name )
-   edit:Show()
-   edit:SetCursorPosition(0)
-   edit:SetFocus()
-   name:Hide()
-end
+  function RE:Rename()
+    local id = selected - FauxScrollFrame_GetOffset(_G.HackListScrollFrame)
+    local name = getobj("HackListItem%dName", id)
+    local edit = getobj("HackListItem%dEdit", id)
+    edit:SetText(items[selected].name)
+    edit:Show()
+    edit:SetCursorPosition(0)
+    edit:SetFocus()
+    name:Hide()
+  end
 
-function Hack.FinishRename(name, editbox)
-   items[selected].name = name
-   Hack.UpdateListItems()
-end
+  function RE:FinishRename(name, _)
+    items[selected].name = name
+    RE:UpdateListItems()
+  end
 
-function Hack.New(page)
-   local index = selected or #items+1
-   local data = (mode == 'page') and '' or {}
-   page = page or { name='', data=data }
-   table.insert(items, index, page)
-   Hack.SelectListItem(index)
-   Hack.UpdateListItems()
-   Hack.ScrollSelectedIntoView()
-   if HackListFrame:IsShown() then Hack.Rename() end
-end
+  function RE:New(page)
+    local index = selected or #items+1
+    local data = (mode == 'page') and '' or {}
+    page = page or { name='', data=data }
+    tinsert(items, index, page)
+    RE:SelectListItem(index)
+    RE:UpdateListItems()
+    RE:ScrollSelectedIntoView()
+    if _G.HackListFrame:IsShown() then RE:Rename() end
+  end
 
-function Hack.Delete()
-   if mode == 'book' and #items == 1 then
-      printf('You cannot delete the last %s!', mode)
-   elseif IsShiftKeyDown() or #items[selected].data == 0 then
-      Hack.DeleteSelected()
-   else
-      StaticPopup_Show('HackDelete', mode)
-   end
-end
+	function RE:Delete()
+		if mode == 'book' and #items == 1 then
+			printf('You cannot delete the last %s!', mode)
+		elseif IsShiftKeyDown() or #items[selected].data == 0 then
+			RE:DeleteSelected()
+		else
+			StaticPopup_Show('REHackDelete', mode)
+		end
+	end
 
-function Hack.DeleteSelected()
-   HackEditFrame:Hide()
-   table.remove(items,selected)
-   if #items == 0 then selected = nil
-   elseif selected > #items then selected = #items end
-   Hack.UpdateButtons()
-   Hack.UpdateListItems()
-end
+  function RE:DeleteSelected()
+    _G.HackEditFrame:Hide()
+    tremove(items,selected)
+    if #items == 0 then selected = nil
+    elseif selected > #items then selected = #items end
+    RE:UpdateButtons()
+    RE:UpdateListItems()
+  end
 
-function Hack.Revert()
-   HackEditBox:SetText(Hack.revert)
-   HackEditBox:SetCursorPosition(0)
-   HackRevert:Disable()
-end
+  function RE:Revert()
+    _G.HackEditBox:SetText(RE.revert)
+    _G.HackEditBox:SetCursorPosition(0)
+    _G.HackRevert:Disable()
+  end
 
-function Hack.MoveItem(direction)
-   local to = selected + direction * (IsShiftKeyDown() and 5 or 1)
-   if     to > #items then to = #items
-   elseif to < 1      then to = 1      end
-   while selected ~= to do
-      items[selected], items[selected+direction] = items[selected+direction], items[selected]
+  function RE:MoveItem(direction)
+    local to = selected + direction * (IsShiftKeyDown() and 5 or 1)
+    if to > #items then to = #items
+    elseif to < 1 then to = 1 end
+    while selected ~= to do
+      items[selected], items[selected + direction] = items[selected + direction], items[selected]
       selected = selected + direction
-   end
-   Hack.ScrollSelectedIntoView()
-   Hack.UpdateButtons()
-end
+    end
+    RE:ScrollSelectedIntoView()
+    RE:UpdateButtons()
+  end
 
-function Hack.MoveUp()
-   Hack.MoveItem(-1)
-end
+  function RE:MoveUp()
+    RE:MoveItem(-1)
+  end
 
-function Hack.MoveDown()
-   Hack.MoveItem(1)
-end
+  function RE:MoveDown()
+    RE:MoveItem(1)
+  end
 
-function Hack.FontBigger()
-   db.fontsize = db.fontsize + 1
-   Hack.UpdateFont()
-end
+  function RE:FontBigger()
+    db.fontsize = db.fontsize + 1
+    RE:UpdateFont()
+  end
 
-function Hack.FontSmaller()
-   db.fontsize = db.fontsize - 1
-   Hack.UpdateFont()
-end
+  function RE:FontSmaller()
+    db.fontsize = db.fontsize - 1
+    RE:UpdateFont()
+  end
 
-function Hack.FontCycle()
-   db.font = (db.font < #Hack.fonts) and (db.font + 1) or (1)
-   Hack.UpdateFont()
-end
+  function RE:FontCycle()
+    db.font = (db.font < #RE.fonts) and (db.font + 1) or (1)
+    RE:UpdateFont()
+  end
 
-function Hack.UpdateFont()
-   HackEditBox:SetFont(Hack.fonts[db.font], db.fontsize)
-end
+  function RE:UpdateFont()
+    _G.HackEditBox:SetFont(RE.fonts[db.font], db.fontsize)
+  end
 
-function Hack.OnButtonClick(name)
-   Hack[ name:match('Hack(.*)') ]()
-end
+  function RE:OnButtonClick(name)
+    RE[gsub(name, 'Hack', '')]()
+  end
 
-function Hack.ApplyColor(colorize)
-   if colorize then
-      HackIndent.enable(HackEditBox, 3)
-      HackIndent.colorCodeEditbox(HackEditBox)
-   else
-      HackIndent.disable(HackEditBox, 3)
-   end
-end
+  function RE:ApplyColor(colorize)
+    if colorize then
+      RE.Indent.enable(_G.HackEditBox, 3)
+      RE.Indent.colorCodeEditbox(_G.HackEditBox)
+    else
+      RE.Indent.disable(_G.HackEditBox, 3)
+    end
+  end
 
-function Hack.EditPage()
-   local page = items[selected]
-   Hack.revert = page.data
-   HackEditBox:SetText(page.data)
-   HackRevert:Disable()
-   HackEditFrame:Show()
-   HackEditBox:SetCursorPosition(0)
-   if HackIndent then
-      HackColorize:SetChecked(page.colorize)
-      Hack.ApplyColor(page.colorize)
-   end
-end
+  function RE:EditPage()
+    local page = items[selected]
+    RE.revert = page.data
+    _G._G.HackEditBox:SetText(page.data)
+    _G.HackRevert:Disable()
+    _G.HackEditFrame:Show()
+    _G.HackEditBox:SetCursorPosition(0)
+    _G.HackColorize:SetChecked(page.colorize)
+    RE:ApplyColor(page.colorize)
+  end
 
-function Hack.OnEditorTextChanged(self)
-   local page = items[selected]
-   page.data = self:GetText()
-   enableButton(HackRevert, page.data ~= Hack.revert)
-   if not HackEditScrollFrameScrollBarThumbTexture:IsVisible() then
-      HackEditScrollFrameScrollBar:Hide()
-   end
-end
+  function RE:OnEditorTextChanged(self)
+    local page = items[selected]
+    page.data = self:GetText()
+    enableButton(_G.HackRevert, page.data ~= RE.revert)
+    if not _G.HackEditScrollFrameScrollBarThumbTexture:IsVisible() then
+      _G.HackEditScrollFrameScrollBar:Hide()
+    end
+  end
 
-function Hack.OnEditorShow()
-   Hack.MakeESCable('HackListFrame',false)
-   PlaySound(SOUNDKIT.IG_QUEST_LIST_OPEN)
-end
+  function RE:OnEditorShow()
+    RE:MakeESCable('HackListFrame', false)
+    PlaySound(_G.SOUNDKIT.IG_QUEST_LIST_OPEN)
+  end
 
-function Hack.OnEditorHide()
-   Hack.MakeESCable('HackListFrame',true)
-   PlaySound(SOUNDKIT.IG_QUEST_LIST_CLOSE)
-end
+  function RE:OnEditorHide()
+    RE:MakeESCable('HackListFrame', true)
+    PlaySound(_G.SOUNDKIT.IG_QUEST_LIST_CLOSE)
+  end
 
-function Hack.OnEditorLoad(self)
-   table.insert(UISpecialFrames,'HackEditFrame')
-   self:SetMinResize(Hack.MinWidth,Hack.MinHeight)
-end
+  function RE:OnEditorLoad(self)
+    tinsert(_G.UISpecialFrames, 'HackEditFrame')
+    self:SetMinResize(RE.MinWidth,RE.MinHeight)
+  end
 
-function Hack.Snap()
-   HackDB.snap = HackSnap:GetChecked()
-   if HackDB.snap then
-      HackEditFrame:ClearAllPoints()
-      HackEditFrame:SetPoint('TOPLEFT', HackListFrame, 'TOPRIGHT', -2, 0)
-   end
-end
+  function RE:Snap()
+    _G.REHackDB.snap = _G.HackSnap:GetChecked()
+    if _G.REHackDB.snap then
+      _G.HackEditFrame:ClearAllPoints()
+      _G.HackEditFrame:SetPoint('TOPLEFT', _G.HackListFrame, 'TOPRIGHT', -2, 0)
+    end
+  end
 
-function Hack.Colorize()
-   local page = items[selected]
-   page.colorize = HackColorize:GetChecked()
-   Hack.ApplyColor(page.colorize)
-end
+  function RE:Colorize()
+    local page = items[selected]
+    page.colorize = _G.HackColorize:GetChecked()
+    RE:ApplyColor(page.colorize)
+  end
 
-do
-   local function send(self) Hack.SendPage(items[selected], self.value) end
-   local menu = {
+  do
+    local function send(self) RE:SendPage(items[selected], self.value) end
+    local menu = {
       { text = 'Player', func = function()
-            local dialog = StaticPopup_Show('HackSendTo')
-            if dialog then
-               dialog.page = items[selected]
-               dialog.editBox:SetScript('OnEnterPressed',  function(t) dialog.button1:Click() end)
-            end
-         end
-      },
-      { text = 'Party', func = send },
-      { text = 'Raid',  func = send },
-      { text = 'Guild', func = send },
-      { text = 'Cancel' },
-   }
-   CreateFrame('Frame', 'HackSendMenu', HackListFrame, 'UIDropDownMenuTemplate')
-   function Hack.Send()
-      menu[2].disabled = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) == 0
-      menu[3].disabled = not UnitInRaid('player')
-      menu[4].disabled = not IsInGuild()
-      EasyMenu(menu, HackSendMenu, 'cursor', nil, nil, 'MENU')
-   end
+        local dialog = StaticPopup_Show('HackSendTo')
+        if dialog then
+          dialog.page = items[selected]
+          dialog.editBox:SetScript('OnEnterPressed', function(_) dialog.button1:Click() end)
+        end
+      end
+    },
+    { text = 'Party', func = send },
+    { text = 'Raid',  func = send },
+    { text = 'Guild', func = send },
+    { text = 'Cancel' },
+  }
+  CreateFrame('Frame', 'HackSendMenu', HackListFrame, 'UIDropDownMenuTemplate')
+  function RE:Send()
+    menu[2].disabled = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) == 0
+    menu[3].disabled = not UnitInRaid('player')
+    menu[4].disabled = not IsInGuild()
+    EasyMenu(menu, _G.HackSendMenu, 'cursor', nil, nil, 'MENU')
+  end
 end
 
-function Hack.SendPage(page, channel, name)
-   local id = 'Hack'..(time()%2+1)
-   local chunksize = 254 - #id
-   local pagename = format('%s [from %s on %s]', page.name, PLAYERNAME, date())
-   SendAddonMessage(id, pagename, channel, name)
-   for i=1,#page.data,chunksize do
-      SendAddonMessage(id, page.data:sub(i,i+chunksize-1), channel, name)
-   end
-   SendAddonMessage(id, '', channel, name)
+function RE:SendPage(page, channel, name)
+  local id = 'Hack'..(time() % 2 + 1)
+  local chunksize = 240 - #id
+  local pagename = format('%s [from %s on %s]', page.name, RE.PlayerName, date())
+  SendAddonMessage(id, pagename, channel, name)
+  for i=1,#page.data,chunksize do
+    SendAddonMessage(id, page.data:sub(i,i+chunksize-1), channel, name)
+  end
+  SendAddonMessage(id, '', channel, name)
 end
 
 do -- receive page
-   local receiving = {}
-   function Hack.CHAT_MSG_ADDON(self, msg, prefix, body, channel, sender)
-      if sender == PLAYERNAME then return end
-		local id
-		if not prefix then
-			id = nil
-		else
-			id = strmatch(prefix, 'Hack(.*)')
-		end
-      --local id = prefix:match('Hack(.*)')
-      if not id then
-         return -- message not for Hack
-      elseif id == 'Ack' then
-         printf('%s accepted your page.', sender)
-      elseif id == 'Nack' then
-         printf('%s rejected your page.', sender)
-      elseif not receiving[id] then -- new page incoming
-         receiving[id] = { name = body, data = {} }
-      elseif #body > 1 then -- append to page body
-         table.insert(receiving[id].data, body)
-      else -- page end
-         local page = { name=receiving[id].name, data=table.concat(receiving[id].data) }
-         receiving[id] = nil
-         local dialog = StaticPopup_Show('HackAccept', sender)
-         if dialog then
-            dialog.page = page
-            dialog.sender = sender
-         end
-      end
-   end
+  local receiving = {}
+  function RE:CHAT_MSG_ADDON(_, _, prefix, body, _, sender)
+    if sender == RE.PlayerName then return end
+    local id
+    if not prefix then
+      id = nil
+    else
+      id = strmatch(prefix, 'Hack(.*)')
+    end
+    if not id then
+      return -- message not for Hack
+    elseif id == 'Ack' then
+      printf('%s accepted your page.', sender)
+    elseif id == 'Nack' then
+      printf('%s rejected your page.', sender)
+    elseif not receiving[id] then -- new page incoming
+      receiving[id] = { name = body, data = {} }
+    elseif #body > 1 then -- append to page body
+      tinsert(receiving[id].data, body)
+    else -- page end
+    local page = { name=receiving[id].name, data=tconcat(receiving[id].data) }
+    receiving[id] = nil
+    local dialog = StaticPopup_Show('HackAccept', sender)
+    if dialog then
+      dialog.page = page
+      dialog.sender = sender
+    end
+  end
+end
 end
 
--- add/remove frame from UISpecialFrames (borrowed from TinyPad)
-function Hack.MakeESCable(frame,enable)
-   local index
-   for i=1,#UISpecialFrames do
-      if UISpecialFrames[i]==frame then
-         index = i
-         break
-      end
-   end
-   if index and not enable then
-      table.remove(UISpecialFrames,index)
-   elseif not index and enable then
-      table.insert(UISpecialFrames,1,frame)
-   end
+function RE:MakeESCable(frame,enable)
+  local index
+  for i=1,#_G.UISpecialFrames do
+    if _G.UISpecialFrames[i]==frame then
+      index = i
+      break
+    end
+  end
+  if index and not enable then
+    tremove(_G.UISpecialFrames,index)
+  elseif not index and enable then
+    tinsert(_G.UISpecialFrames,1,frame)
+  end
 end

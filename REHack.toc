@@ -1,0 +1,10 @@
+## Interface: 80000
+## Title: |cFF74D06CRE|rHack
+## Version: 2.0
+## Notes: Notebook/coding framework.
+## Author: AcidWeb, Mud, Vandesdelca32
+## SavedVariables: REHackDB
+
+Hack.lua
+Hack.xml
+Indent.lua
