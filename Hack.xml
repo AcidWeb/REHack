@@ -340,6 +340,7 @@
 					</Anchor>
 				</Anchors>
 				<Scripts>
+					<OnLoad>self.cursorOffset = 0</OnLoad>
 					<OnVerticalScroll>FauxScrollFrame_OnVerticalScroll(self, offset, REHack.ListItemHeight, REHack.UpdateListItems)</OnVerticalScroll>
 				</Scripts>
 			</ScrollFrame>
@@ -412,13 +413,16 @@
 						</Offset>
 					</Anchor>
 				</Anchors>
+				<Scripts>
+					<OnLoad>self.cursorOffset = 0</OnLoad>
+				</Scripts>
 				<ScrollChild>
 					<EditBox name='HackEditBox' multiLine='true' autoFocus='false'>
 						<TextInsets>
 							<AbsInset left='5' right='40' top='4' bottom='9'/>
 						</TextInsets>
 						<Scripts>
-							<OnTextChanged>ScrollingEdit_OnTextChanged(self, self:GetParent()) REHack:OnEditorTextChanged(self)</OnTextChanged>
+							<OnTextChanged>ScrollingEdit_OnTextChanged(self, self:GetParent()) C_Timer.After(0.25, REHack.OnEditorTextChanged)</OnTextChanged>
 							<OnCursorChanged>ScrollingEdit_OnCursorChanged(self, x, y, w, h)</OnCursorChanged>
 							<OnUpdate>ScrollingEdit_OnUpdate(self, 0, self:GetParent())</OnUpdate>
 							<OnEscapePressed>self:ClearFocus()</OnEscapePressed>

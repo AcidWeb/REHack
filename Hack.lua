@@ -90,7 +90,7 @@ RE.fonts = {
 	'Interface\\AddOns\\REHack\\Media\\VeraMono.ttf',
 	'Interface\\AddOns\\REHack\\Media\\SourceCodePro.ttf',
 }
-RE.Tab						=	'     '
+RE.Tab						=	'   '
 RE.Indent         =	{}
 RE.ListItemHeight =	17 -- used in the XML, too
 RE.ListVOffset    =	37 -- vertical space not available for list items
@@ -201,6 +201,16 @@ end
 
 function RE:Run(index, ...)
 	return RE:Execute(RE:Get(index or selected), ...)
+end
+
+do
+	local loaded = {}
+	function RE:Require(name)
+		if not loaded[name] then
+			loaded[name] = true
+			RE:Run(name)
+		end
+	end
 end
 
 function RE:DoAutorun()
@@ -563,9 +573,9 @@ function RE:EditPage()
 	RE:ApplyColor(page.colorize)
 end
 
-function RE:OnEditorTextChanged(self)
+function RE:OnEditorTextChanged()
 	local page = items[selected]
-	page.data = self:GetText()
+	page.data = _G.HackEditBox:GetText()
 	enableButton(_G.HackRevert, page.data ~= RE.revert)
 	if not _G.HackEditScrollFrameScrollBarThumbTexture:IsVisible() then
 	  _G.HackEditScrollFrameScrollBar:Hide()
