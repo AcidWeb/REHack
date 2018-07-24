@@ -44,9 +44,9 @@ end
 local select, pairs, format, getglobal, loadstring, type, pcall, gsub, unpack, strsplit = _G.select, _G.pairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.unpack, _G.strsplit
 local mmin, mfloor = _G.math.min, _G.math.floor
 local tinsert, tremove = _G.table.insert, _G.table.remove
+local ReloadUI = _G.ReloadUI
 local CreateFrame = _G.CreateFrame
 local EasyMenu = _G.EasyMenu
-local StaticPopup_Show = _G.StaticPopup_Show
 local PlaySound = _G.PlaySound
 local IsAddOnLoaded = _G.IsAddOnLoaded
 local IsShiftKeyDown = _G.IsShiftKeyDown
@@ -54,6 +54,7 @@ local IsInGuild = _G.IsInGuild
 local UnitName = _G.UnitName
 local UnitInRaid = _G.UnitInRaid
 local GetNumGroupMembers = _G.GetNumGroupMembers
+local StaticPopup_Show = _G.StaticPopup_Show
 local FauxScrollFrame_Update = _G.FauxScrollFrame_Update
 local FauxScrollFrame_GetOffset = _G.FauxScrollFrame_GetOffset
 local FauxScrollFrame_SetOffset = _G.FauxScrollFrame_SetOffset
@@ -85,6 +86,7 @@ RE.Tooltips = {
 	HackSearchEdit  = 'Find %ss matching this text\nENTER to search forward\nSHIFT+ENTER to search backwards',
 	HackSearchName  = 'Search %s name',
 	HackSearchBody  = 'Search page text',
+	HackReloadUI    = 'Reload UI'
 }
 RE.fonts = {
 	'Interface\\AddOns\\REHack\\Media\\VeraMono.ttf',
@@ -528,6 +530,10 @@ end
 
 function RE:MoveDown()
 	RE:MoveItem(1)
+end
+
+function RE:ReloadUI()
+	ReloadUI()
 end
 
 function RE:FontBigger()

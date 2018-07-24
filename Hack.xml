@@ -291,6 +291,17 @@
 					<TexCoords left=".625" right=".75" top=".5" bottom=".625"/>
 				</DisabledTexture>
 			</Button>
+			<Button name='HackReloadUI' inherits='T_HackButton'>
+				<Anchors>
+					<Anchor point='LEFT' relativeTo='HackSend' relativePoint='RIGHT'/>
+				</Anchors>
+				<NormalTexture file="Interface\AddOns\REHack\Media\Buttons">
+					<TexCoords left=".625" right=".75" top=".0" bottom=".125"/>
+				</NormalTexture>
+				<PushedTexture file="Interface\AddOns\REHack\Media\Buttons">
+					<TexCoords left=".75" right=".875" top=".0" bottom=".125"/>
+				</PushedTexture>
+			</Button>
 			<CheckButton name='HackSearchBody' inherits='T_HackSearchCheck'>
 				<Anchors>
 					<Anchor point='RIGHT' relativePoint='LEFT' relativeTo='HackListFrameClose'/>
