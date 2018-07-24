@@ -1,3 +1,6 @@
+-- This is a Hack-specific version of the addon 'For All Indents And Purposes'
+-- written by kristofer.karlsson@gmail.com
+
 local _G = _G
 local _, RE = ...
 _G.REHack = RE
