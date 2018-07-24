@@ -48,6 +48,7 @@ local ReloadUI = _G.ReloadUI
 local CreateFrame = _G.CreateFrame
 local EasyMenu = _G.EasyMenu
 local PlaySound = _G.PlaySound
+local DisableAddOn = _G.DisableAddOn
 local IsAddOnLoaded = _G.IsAddOnLoaded
 local IsShiftKeyDown = _G.IsShiftKeyDown
 local IsInGuild = _G.IsInGuild
@@ -75,6 +76,7 @@ _G.REHackDB = { -- default settings saved variables
 		 }
 	  }
 	},
+	imported = false,
 }
 
 RE.Tooltips = {
@@ -306,6 +308,17 @@ function RE:ADDON_LOADED(_, addon)
 			AS:SkinScrollBar(_G.HackEditScrollFrameScrollBar)
 			AS:SkinTab(_G.HackListFrameTab1)
 			AS:SkinTab(_G.HackListFrameTab2)
+		end
+
+		if IsAddOnLoaded('Hack') and not db.imported then
+			DisableAddOn('Hack')
+			for _, book in pairs(_G.HackDB.books) do
+				for _, page in pairs(book.data) do
+					RE:New(page)
+				end
+			end
+			db.imported = true
+			printf('Import from Hack complete. Reload your UI.')
 		end
 
 		_G.HackListFrame:UnregisterEvent('ADDON_LOADED')
