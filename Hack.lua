@@ -122,10 +122,10 @@ StaticPopupDialogs.HackAccept = {
 	timeout = 0, whileDead = 1, hideOnEscape = 1,
 	OnAccept = function(self)
 		RE:New(self.page)
-		COMM:SendCommMessage('REHack', '1ź', 'WHISPER', self.sender, 'BULK')
+		COMM:SendCommMessage('REHack', '1', 'WHISPER', self.sender, 'BULK')
 	end,
 	OnCancel = function(self)
-		COMM:SendCommMessage('REHack', '0ź', 'WHISPER', self.sender, 'BULK')
+		COMM:SendCommMessage('REHack', '0', 'WHISPER', self.sender, 'BULK')
 	end,
 }
 StaticPopupDialogs.HackSendTo = {
@@ -261,12 +261,12 @@ function RE:OnLoad(self)
 end
 
 function RE:OnAddonMessage(message, _, sender)
-	local signal, _, name, _, payload = strsplit('ź', message)
-	if signal == '0' then
+	if message == '0' then
 		printf('%s rejected your page.', sender)
-	elseif signal == '1' then
+	elseif message == '1' then
 		printf('%s accepted your page.', sender)
-	elseif signal == '2' then
+	else
+		local name, _, _, payload = strsplit('：', message)
 		if sender == RE.PlayerName then return end
 		local page = {name = name, data = payload}
 		local dialog = StaticPopup_Show('HackAccept', sender)
@@ -665,7 +665,7 @@ do
 end
 
 function RE:SendPage(page, channel, name)
-	COMM:SendCommMessage('REHack', '2ź'..page.name..'ź'..page.data, channel, name, 'BULK')
+	COMM:SendCommMessage('REHack', page.name..'：'..page.data, channel, name, 'BULK')
 end
 
 function RE:MakeESCable(frame, enable)
