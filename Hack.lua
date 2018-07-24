@@ -64,7 +64,17 @@ _G.REHackDB = { -- default settings saved variables
 	fontsize = 16,
 	snap = 1,
 	book = 1,
-	books = {{name = 'Default', data = {}}},
+	books = {
+		{name = 'Default',
+		 data = {
+			{
+				["data"] = "Welcome to REHack, a notebook and/or UI tweaking tool.\n\nThe UI is mostly self-explanatory; mouse over buttons to see what they do. A few things deserve special mention:\n\n  1. Run the selected page as Lua code by clicking the 'play' button at the top of the edit window (this one) or by pressing SHIFT+TAB from within the editor.\n\n  2. You can make a page run automatically when REHack loads by clicking the 'play' button next to its name in the list window. This makes Hack useful for little UI tweaks that don't warrant a full-blown addon. For example, I hate the mail font. It's easy to fix, but I don't want to write a whole addon for two lines of code. I type the lines into a Hack page and flag it to execute. Done.\n\nNOTES:\n\n  * Pages are saved as you type and there is no undo, so be careful. If you really screw up a page, you can hit the Revert button, which will give you back the page as it was when you first opened it.\n   \n  * The list frame and edit frame are resizable. Just grab the little handle in the bottom right corner.\n   \n  * Page search is case-insensitive. You can use regex (Lua patterns) with the exception of [] or ().\n   \n  * You can double-click a page name to rename it (in addition to using the rename button).\n   \n  * Autorun pages run in the order they appear, so you can control their execution order by moving them up and down the list.\n\n  * REHack:Require \"PageName\" function can be used to load other pages before executing the current one.",
+				["name"] = "|cff7cb8c7Welcome to REHack!  |cffff0000READ ME FIRST!!",
+				["colorize"] = false,
+			},
+		 }
+	  }
+	},
 }
 
 RE.Tooltips = {
