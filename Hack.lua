@@ -588,10 +588,10 @@ end
 
 function RE:ApplyColor(colorize)
 	if colorize then
-	  RE.Indent.enable(_G.HackEditBox, 3)
+	  RE.Indent.enable(_G.HackEditBox, nil, 3)
 	  RE.Indent.colorCodeEditbox(_G.HackEditBox)
 	else
-	  RE.Indent.disable(_G.HackEditBox, 3)
+	  RE.Indent.disable(_G.HackEditBox)
 	end
 end
 
