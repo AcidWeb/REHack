@@ -151,7 +151,7 @@ local mode = 'page' -- 'page' or 'book'
 local selected = nil -- index of selected list item
 
 local function printf(...)
-	_G.DEFAULT_CHAT_FRAME:AddMessage('|cffff6600<|r|cFF74D06CRE|r|cffff6600Hack>: '..format(...))
+	_G.DEFAULT_CHAT_FRAME:AddMessage('|cffff6600<|r|cFF74D06CRE|r|cffff6600Hack>: '..format(...)..'|r')
 end
 local function getobj(...)
 	return getglobal(format(...))
@@ -183,13 +183,13 @@ end
 
 function RE:ScriptError(type, err)
 	local name, line, msg = err:match('%[string (".-")%]:(%d+): (.*)')
-	printf('%s error%s:\n %s', type, name and format(' in %s at line %d', name, line, msg) or '', err)
+	printf('%s error%s:|cFFFFFFFF\n %s', type, name and format(' in |cFFFFFFFF%s|r|cffff6600 at line |cFFFFFFFF%d|r|cffff6600', name, line, msg) or '', err)
 end
 
 function RE:Compile(page)
 	local func, err = loadstring(page.data:gsub('||','|'), page.name)
 	if not func then
-		RE:ScriptError('syntax', err)
+		RE:ScriptError('Syntax', err)
 		return
 	end
 	return func
@@ -206,7 +206,7 @@ end
 
 local function CheckResult(...)
 	if ... then return select(2, ...) end
-	RE:ScriptError('runtime', select(2, ...))
+	RE:ScriptError('Runtime', select(2, ...))
 end
 
 function RE:Execute(func, ...)
@@ -565,7 +565,11 @@ function RE:FontBigger()
 end
 
 function RE:FontSmaller()
-	db.fontsize = db.fontsize - 1
+	if db.fontsize > 1 then
+		db.fontsize = db.fontsize - 1
+	else
+		db.fontsize = 1
+	end
 	RE:UpdateFont()
 end
 
