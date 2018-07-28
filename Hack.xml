@@ -430,17 +430,25 @@
 				</Scripts>
 				<ScrollChild>
 					<EditBox name='HackEditBox' multiLine='true' autoFocus='false'>
-						<TextInsets>
-							<AbsInset left='5' right='40' top='4' bottom='9'/>
-						</TextInsets>
 						<Scripts>
 							<OnLoad>self.cursorOffset = 0</OnLoad>
-							<OnTextChanged>ScrollingEdit_OnTextChanged(self, self:GetParent()) C_Timer.After(0.25, REHack.OnEditorTextChanged)</OnTextChanged>
+							<OnTextChanged>ScrollingEdit_OnTextChanged(self, self:GetParent()); REHack:OnUpdateLines(); C_Timer.After(0.25, REHack.OnEditorTextChanged)</OnTextChanged>
 							<OnCursorChanged>ScrollingEdit_OnCursorChanged(self, x, y, w, h)</OnCursorChanged>
 							<OnUpdate>ScrollingEdit_OnUpdate(self, 0, self:GetParent())</OnUpdate>
 							<OnEscapePressed>self:ClearFocus()</OnEscapePressed>
 							<OnTabPressed>if IsShiftKeyDown() then REHack:Run() else HackEditBox:Insert(REHack.Tab) end</OnTabPressed>
 						</Scripts>
+						<Layers>
+							<Layer level='ARTWORK'>
+								<FontString name='$parentLine' justifyH='RIGHT' justifyV='TOP'/>
+								<Texture name='$parentLineBG'/>
+								<FontString name='$parentLineTest' hidden='true'>
+									<Anchors>
+										<Anchor point='TOPLEFT'/>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
 						<FontString inherits='GameFontHighlight'/>
 					</EditBox>
 				</ScrollChild>

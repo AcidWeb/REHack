@@ -41,8 +41,9 @@ if (UIDROPDOWNMENU_OPEN_PATCH_VERSION or 0) < 1 then
 end
 
 -- GLOBALS: LE_PARTY_CATEGORY_HOME, UIDROPDOWNMENU_VALUE_PATCH_VERSION, UIDROPDOWNMENU_MAXLEVELS, UIDROPDOWNMENU_MAXBUTTONS, UIDROPDOWNMENU_OPEN_PATCH_VERSION, UIDROPDOWNMENU_OPEN_MENU, issecurevariable, hooksecurefunc
-local select, pairs, format, getglobal, loadstring, type, pcall, gsub, unpack, strsplit = _G.select, _G.pairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.unpack, _G.strsplit
-local mmin, mfloor = _G.math.min, _G.math.floor
+local select, pairs, format, getglobal, loadstring, type, pcall, gsub, unpack, wipe, tonumber = _G.select, _G.pairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.unpack, _G.wipe, _G.tonumber
+local strsplit, strrep = _G.string.split, _G.string.rep
+local mmin, mfloor, mround = _G.math.min, _G.math.floor, _G.Round
 local tinsert, tremove = _G.table.insert, _G.table.remove
 local ReloadUI = _G.ReloadUI
 local CreateFrame = _G.CreateFrame
@@ -69,7 +70,7 @@ _G.REHackDB = { -- default settings saved variables
 		{name = 'Default',
 		 data = {
 			{
-				["data"] = "Welcome to REHack, a notebook and/or UI tweaking tool.\n\nThe UI is mostly self-explanatory; mouse over buttons to see what they do. A few things deserve special mention:\n\n  1. Run the selected page as Lua code by clicking the 'play' button at the top of the edit window (this one) or by pressing SHIFT+TAB from within the editor.\n\n  2. You can make a page run automatically when REHack loads by clicking the 'play' button next to its name in the list window. This makes Hack useful for little UI tweaks that don't warrant a full-blown addon. For example, I hate the mail font. It's easy to fix, but I don't want to write a whole addon for two lines of code. I type the lines into a Hack page and flag it to execute. Done.\n\nNOTES:\n\n  * Pages are saved as you type and there is no undo, so be careful. If you really screw up a page, you can hit the Revert button, which will give you back the page as it was when you first opened it.\n   \n  * The list frame and edit frame are resizable. Just grab the little handle in the bottom right corner.\n   \n  * Page search is case-insensitive. You can use regex (Lua patterns) with the exception of [] or ().\n   \n  * You can double-click a page name to rename it (in addition to using the rename button).\n   \n  * Autorun pages run in the order they appear, so you can control their execution order by moving them up and down the list.\n\n  * REHack:Require \"PageName\" function can be used to load other pages before executing the current one.",
+				["data"] = "Welcome to REHack, a notebook and/or UI tweaking tool.\n\nThe UI is mostly self-explanatory; mouse over buttons to see what they do. A few things deserve special mention:\n\n  1. Run the selected page as Lua code by clicking the 'play' button at the top of the edit window (this one) or by pressing SHIFT+TAB from within the editor.\n\n  2. You can make a page run automatically when REHack loads by clicking the 'play' button next to its name in the list window. This makes REHack useful for little UI tweaks that don't warrant a full-blown addon. For example, I hate the mail font. It's easy to fix, but I don't want to write a whole addon for two lines of code. I type the lines into a REHack page and flag it to execute. Done.\n\nNOTES:\n\n  * Pages are saved as you type and there is no undo, so be careful. If you really screw up a page, you can hit the Revert button, which will give you back the page as it was when you first opened it.\n   \n  * The list frame and edit frame are resizable. Just grab the little handle in the bottom right corner.\n   \n  * Page search is case-insensitive. You can use regex (Lua patterns) with the exception of [] or ().\n   \n  * You can double-click a page name to rename it (in addition to using the rename button).\n   \n  * Autorun pages run in the order they appear, so you can control their execution order by moving them up and down the list.\n\n  * REHack:Require \"PageName\" function can be used to load other pages before executing the current one.",
 				["name"] = "|cff7cb8c7Welcome to REHack!  |cffff0000READ ME FIRST!!",
 				["colorize"] = false,
 			},
@@ -80,40 +81,42 @@ _G.REHackDB = { -- default settings saved variables
 }
 
 RE.Tooltips = {
-	HackNew         = 'Create new %s',
-	HackDelete      = 'Delete this %s\nSHIFT to skip confirmation prompt',
-	HackRename      = 'Rename this %s',
-	HackMoveUp      = 'Move this %s up in the list\nSHIFT to move in increments of 5',
-	HackMoveDown    = 'Move this %s down in the list\nSHIFT to move in increments of 5',
-	HackAutorun     = 'Run this page automatically when REHack loads',
-	HackRun         = 'Run this page',
-	HackSend        = 'Send this page to another REHack user',
-	HackSnap        = 'Attach editor to list window',
-	HackEditClose   = 'Close editor for this page',
-	HackFontCycle   = 'Cycle through available fonts',
-	HackFontBigger  = 'Increase font size',
+	HackNew = 'Create new %s',
+	HackDelete = 'Delete this %s\nSHIFT to skip confirmation prompt',
+	HackRename = 'Rename this %s',
+	HackMoveUp = 'Move this %s up in the list\nSHIFT to move in increments of 5',
+	HackMoveDown = 'Move this %s down in the list\nSHIFT to move in increments of 5',
+	HackAutorun = 'Run this page automatically when REHack loads',
+	HackRun = 'Run this page',
+	HackSend = 'Send this page to another REHack user',
+	HackSnap = 'Attach editor to list window',
+	HackEditClose = 'Close editor for this page',
+	HackFontCycle = 'Cycle through available fonts',
+	HackFontBigger = 'Increase font size',
 	HackFontSmaller = 'Decrease font size',
-	HackRevert      = 'Revert to saved version of this page',
-	HackColorize    = 'Enable Lua syntax highlighting for this page',
-	HackSearchEdit  = 'Find %ss matching this text\nENTER to search forward\nSHIFT+ENTER to search backwards',
-	HackSearchName  = 'Search %s name',
-	HackSearchBody  = 'Search page text',
-	HackReloadUI    = 'Reload UI'
+	HackRevert = 'Revert to saved version of this page',
+	HackColorize = 'Enable Lua syntax highlighting for this page',
+	HackSearchEdit = 'Find %ss matching this text\nENTER to search forward\nSHIFT+ENTER to search backwards',
+	HackSearchName = 'Search %s name',
+	HackSearchBody = 'Search page text',
+	HackReloadUI = 'Reload UI'
 }
-RE.fonts = {
+RE.Fonts = {
 	'Interface\\AddOns\\REHack\\Media\\VeraMono.ttf',
 	'Interface\\AddOns\\REHack\\Media\\SourceCodePro.ttf',
 }
-RE.Tab						=	'   '
-RE.Indent         =	{}
-RE.ListItemHeight =	17 -- used in the XML, too
-RE.ListVOffset    =	37 -- vertical space not available for list items
-RE.MinHeight      =	141 -- scroll bar gets wonky if we let the window get too short
-RE.MinWidth       =	296 -- keep buttons from crowding/overlapping
-RE.MaxWidth       =	572 -- tune to match size of 200 character page name
-RE.MaxVisible     =	50 -- num visible without scrolling; limits num HackListItems we must create
-RE.NumVisible     =	0 -- calculated during list resize
-RE.PlayerName 		=	UnitName('PLAYER')
+RE.Tab =	'   '
+RE.PlayerName =	UnitName('PLAYER')
+RE.ListItemHeight = 17 -- used in the XML, too
+RE.ListVOffset = 37 -- vertical space not available for list items
+RE.MinHeight = 141 -- scroll bar gets wonky if we let the window get too short
+RE.MinWidth = 296 -- keep buttons from crowding/overlapping
+RE.MaxWidth = 572 -- tune to match size of 200 character page name
+RE.MaxVisible = 50 -- num visible without scrolling; limits num HackListItems we must create
+RE.NumVisible = 0 -- calculated during list resize
+RE.Indent = {}
+RE.LineProcessing = {}
+RE.ErrorOverride = 0
 
 _G.BINDING_HEADER_HACK = 'REHack'
 
@@ -184,6 +187,8 @@ end
 function RE:ScriptError(type, err)
 	local name, line, msg = err:match('%[string (".-")%]:(%d+): (.*)')
 	printf('%s error%s:|cFFFFFFFF\n %s', type, name and format(' in |cFFFFFFFF%s|r|cffff6600 at line |cFFFFFFFF%d|r|cffff6600', name, line, msg) or '', err)
+	RE.ErrorOverride = tonumber(line)
+	RE:OnUpdateLines()
 end
 
 function RE:Compile(page)
@@ -214,6 +219,7 @@ function RE:Execute(func, ...)
 end
 
 function RE:Run(index, ...)
+	RE.ErrorOverride = 0
 	return RE:Execute(RE:Get(index or selected), ...)
 end
 
@@ -286,6 +292,8 @@ function RE:ADDON_LOADED(_, addon)
 		RE:UpdateSearchContext()
 		_G.HackSnap:SetChecked(_G.REHackDB.snap)
 		RE:Snap()
+		_G.HackEditBoxLineTest:SetNonSpaceWrap(true)
+		_G.HackEditBoxLineBG:SetColorTexture(0, 0, 0, 0.50)
 		_G.HackListFrame:SetMaxResize(RE.MaxWidth, (RE.MaxVisible * RE.ListItemHeight) + RE.ListVOffset + 5)
 		_G.HackListFrame:SetMinResize(RE.MinWidth, RE.MinHeight)
 		_G.HackListFrame:SetScript('OnSizeChanged', RE.UpdateNumListItemsVisible)
@@ -297,7 +305,7 @@ function RE:ADDON_LOADED(_, addon)
 		if IsAddOnLoaded('ElvUI') and IsAddOnLoaded('AddOnSkins') then
 			local AS = unpack(_G.AddOnSkins)
 			_G.ElvUI[1]:GetModule('Chat'):AddPluginIcons(ElvUISwag)
-
+			_G.HackEditBoxLineBG:SetColorTexture(0, 0, 0, 0.25)
 			AS:SkinFrame(_G.HackListFrame)
 			AS:SkinFrame(_G.HackEditFrame)
 			AS:SkinCloseButton(_G.HackListFrameClose)
@@ -474,7 +482,7 @@ end
 
 function RE:Tooltip(self)
 	local which = self:GetName()
-	local tip = which:match('Autorun') and 'Automatically run this page when Hack loads' or format(RE.Tooltips[which], mode)
+	local tip = which:match('Autorun') and 'Automatically run this page when REHack loads' or format(RE.Tooltips[which], mode)
 	_G.GameTooltip:SetOwner(self, 'ANCHOR_RIGHT')
 	_G.GameTooltip:AddLine(tip)
 	_G.GameTooltip:Show()
@@ -574,12 +582,21 @@ function RE:FontSmaller()
 end
 
 function RE:FontCycle()
-	db.font = (db.font < #RE.fonts) and (db.font + 1) or (1)
+	db.font = (db.font < #RE.Fonts) and (db.font + 1) or (1)
 	RE:UpdateFont()
 end
 
 function RE:UpdateFont()
-	_G.HackEditBox:SetFont(RE.fonts[db.font], db.fontsize)
+	_G.HackEditBox:SetFont(RE.Fonts[db.font], db.fontsize)
+	_G.HackEditBox:SetTextInsets(24 + db.fontsize, 40, 4, 9)
+	_G.HackEditBoxLine:ClearAllPoints()
+	_G.HackEditBoxLine:SetFont(RE.Fonts[db.font], db.fontsize)
+	_G.HackEditBoxLine:SetPoint('TOPRIGHT', _G.HackEditBox, 'TOPLEFT', 14 + db.fontsize, -4)
+	_G.HackEditBoxLine:SetPoint('BOTTOMRIGHT', _G.HackEditBox, 'BOTTOMLEFT', 14 + db.fontsize, 9)
+	_G.HackEditBoxLineBG:ClearAllPoints()
+	_G.HackEditBoxLineBG:SetPoint('TOPLEFT', _G.HackEditBox, 'TOPLEFT')
+	_G.HackEditBoxLineBG:SetPoint('BOTTOMRIGHT', _G.HackEditBox, 'BOTTOMLEFT', 20 + db.fontsize, 5)
+	_G.HackEditBoxLineTest:SetFont(RE.Fonts[db.font], db.fontsize)
 end
 
 function RE:OnButtonClick(name)
@@ -611,8 +628,32 @@ function RE:OnEditorTextChanged()
 	page.data = _G.HackEditBox:GetText()
 	enableButton(_G.HackRevert, page.data ~= RE.revert)
 	if not _G.HackEditScrollFrameScrollBarThumbTexture:IsVisible() then
-	  _G.HackEditScrollFrameScrollBar:Hide()
+		_G.HackEditScrollFrameScrollBar:Hide()
 	end
+end
+
+function RE:OnUpdateLines()
+	local content = ''
+	local color = false
+	local targetWidth = _G.HackEditBox:GetWidth() - (64 + db.fontsize)
+	wipe(RE.LineProcessing)
+	RE.LineProcessing = {strsplit('\n', _G.HackEditBox:GetText(true))}
+	for i, line in pairs(RE.LineProcessing) do
+		_G.HackEditBoxLineTest:SetWidth(targetWidth)
+		_G.HackEditBoxLineTest:SetText(line:gsub('|', '||'))
+		local linesNum = mround(_G.HackEditBoxLineTest:GetStringHeight() / db.fontsize)
+		if linesNum == 0 then linesNum = 1 end
+		if RE.ErrorOverride == i then
+			content = content..'|cFFFF0000'..i..'|r'..strrep('\n', linesNum)
+		elseif color then
+			content = content..'|cFFD3D3D3'..i..'|r'..strrep('\n', linesNum)
+		else
+			content = content..i..strrep('\n', linesNum)
+		end
+		color = not color
+	end
+	RE.ErrorOverride = 0
+	_G.HackEditBoxLine:SetText(content)
 end
 
 function RE:OnEditorShow()
