@@ -34,7 +34,6 @@
 
 local _G = _G
 local _, RE = ...
-_G.REHack = RE
 
 local lib = RE.Indent
 

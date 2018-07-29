@@ -60,6 +60,7 @@ local StaticPopup_Show = _G.StaticPopup_Show
 local FauxScrollFrame_Update = _G.FauxScrollFrame_Update
 local FauxScrollFrame_GetOffset = _G.FauxScrollFrame_GetOffset
 local FauxScrollFrame_SetOffset = _G.FauxScrollFrame_SetOffset
+local ElvUI = _G.ElvUI
 
 _G.REHackDB = { -- default settings saved variables
 	font = 1,
@@ -302,20 +303,8 @@ function RE:ADDON_LOADED(_, addon)
 
 		COMM:RegisterComm('REHack', RE.OnAddonMessage)
 
-		if IsAddOnLoaded('ElvUI') and IsAddOnLoaded('AddOnSkins') then
-			local AS = unpack(_G.AddOnSkins)
-			_G.ElvUI[1]:GetModule('Chat'):AddPluginIcons(ElvUISwag)
-			_G.HackEditBoxLineBG:SetColorTexture(0, 0, 0, 0.25)
-			AS:SkinFrame(_G.HackListFrame)
-			AS:SkinFrame(_G.HackEditFrame)
-			AS:SkinCloseButton(_G.HackListFrameClose)
-			AS:SkinCloseButton(_G.HackEditFrameClose)
-			AS:SkinCheckBox(_G.HackSearchName)
-			AS:SkinCheckBox(_G.HackSearchBody)
-			AS:SkinEditBox(_G.HackSearchEdit)
-			AS:SkinScrollBar(_G.HackEditScrollFrameScrollBar)
-			AS:SkinTab(_G.HackListFrameTab1)
-			AS:SkinTab(_G.HackListFrameTab2)
+		if ElvUI then
+			ElvUI[1]:GetModule('Chat'):AddPluginIcons(ElvUISwag)
 		end
 
 		if IsAddOnLoaded('Hack') and not db.imported then
