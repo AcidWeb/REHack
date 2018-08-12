@@ -120,6 +120,7 @@ RE.NumVisible = 0 -- calculated during list resize
 RE.Indent = {}
 RE.LineProcessing = {}
 RE.ErrorOverride = 0
+RE.CurrentlyRunning = ""
 
 _G.BINDING_HEADER_HACK = 'REHack'
 
@@ -196,6 +197,7 @@ function RE:ScriptError(type, err)
 end
 
 function RE:Compile(page)
+	RE.CurrentlyRunning = page.name
 	local func, err = loadstring(page.data:gsub('||','|'), page.name)
 	if not func then
 		RE:ScriptError('Syntax', err)
@@ -238,9 +240,9 @@ do
 end
 
 function RE:SV()
-	local name = items[selected].name
-	if not sv[name] or type(sv[name]) ~= 'table' then sv[name] = {} end
-	return sv[name]
+	if RE.CurrentlyRunning == "" then return end
+	if not sv[RE.CurrentlyRunning] or type(sv[RE.CurrentlyRunning]) ~= 'table' then sv[RE.CurrentlyRunning] = {} end
+	return sv[RE.CurrentlyRunning]
 end
 
 function RE:DoAutorun()
@@ -499,6 +501,8 @@ function RE:Rename()
 end
 
 function RE:FinishRename(name, _)
+	sv[name] = sv[items[selected].name]
+	sv[items[selected].name] = nil
 	items[selected].name = name
 	RE:UpdateListItems()
 end
