@@ -41,7 +41,7 @@ if (UIDROPDOWNMENU_OPEN_PATCH_VERSION or 0) < 1 then
 end
 
 -- GLOBALS: LE_PARTY_CATEGORY_HOME, UIDROPDOWNMENU_VALUE_PATCH_VERSION, UIDROPDOWNMENU_MAXLEVELS, UIDROPDOWNMENU_MAXBUTTONS, UIDROPDOWNMENU_OPEN_PATCH_VERSION, UIDROPDOWNMENU_OPEN_MENU, issecurevariable, hooksecurefunc
-local select, pairs, format, getglobal, loadstring, type, pcall, gsub, unpack, wipe, tonumber = _G.select, _G.pairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.unpack, _G.wipe, _G.tonumber
+local select, pairs, format, getglobal, loadstring, type, pcall, gsub, wipe, tonumber = _G.select, _G.pairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.wipe, _G.tonumber
 local strsplit, strrep = _G.string.split, _G.string.rep
 local mmin, mfloor, mround = _G.math.min, _G.math.floor, _G.Round
 local tinsert, tremove = _G.table.insert, _G.table.remove
@@ -62,7 +62,9 @@ local FauxScrollFrame_GetOffset = _G.FauxScrollFrame_GetOffset
 local FauxScrollFrame_SetOffset = _G.FauxScrollFrame_SetOffset
 local ElvUI = _G.ElvUI
 
-_G.REHackDB = { -- default settings saved variables
+-- default settings saved variables
+_G.REHackSV = {}
+_G.REHackDB = {
 	font = 1,
 	fontsize = 16,
 	snap = 1,
@@ -150,6 +152,7 @@ StaticPopupDialogs.REHackDelete = {
 }
 
 local db -- alias for REHackDB
+local sv -- alias for REHackSV
 local items -- alias for REHackDB.books[REHackDB.book].data
 local mode = 'page' -- 'page' or 'book'
 local selected = nil -- index of selected list item
@@ -234,6 +237,12 @@ do
 	end
 end
 
+function RE:SV()
+	local name = items[selected].name
+	if not sv[name] or type(sv[name]) ~= 'table' then sv[name] = {} end
+	return sv[name]
+end
+
 function RE:DoAutorun()
 	for _, book in pairs(_G.REHackDB.books) do
 		for _, page in pairs(book.data) do
@@ -286,6 +295,7 @@ end
 
 function RE:ADDON_LOADED(_, addon)
 	if addon == 'REHack' then
+		sv = _G.REHackSV
 		db = _G.REHackDB
 		items = db.books[db.book].data
 		RE:UpdateFont()
@@ -516,6 +526,7 @@ end
 
 function RE:DeleteSelected()
 	_G.HackEditFrame:Hide()
+	sv[items[selected].name] = nil
 	tremove(items,selected)
 	if #items == 0 then selected = nil
 	elseif selected > #items then selected = #items end

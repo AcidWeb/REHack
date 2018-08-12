@@ -1,9 +1,9 @@
 ## Interface: 80000
 ## Title: |cFF74D06CRE|rHack
-## Version: 2.1.1
+## Version: 2.1.2
 ## Notes: Notebook/coding framework.
 ## Author: AcidWeb, Mud, Vandesdelca32
-## SavedVariables: REHackDB
+## SavedVariables: REHackDB, REHackSV
 ## X-Website: https://www.curseforge.com/wow/addons/rehack
 ## X-Curse-Project-ID: 299052
 ## X-WoWI-ID: 24734
