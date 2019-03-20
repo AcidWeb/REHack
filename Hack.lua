@@ -46,7 +46,6 @@ if (COMMUNITY_UIDD_REFRESH_PATCH_VERSION or 0) < 1 then
 	end)
 end
 
--- GLOBALS: LE_PARTY_CATEGORY_HOME, UIDROPDOWNMENU_VALUE_PATCH_VERSION, UIDROPDOWNMENU_MAXLEVELS, UIDROPDOWNMENU_MAXBUTTONS, UIDROPDOWNMENU_OPEN_PATCH_VERSION, UIDROPDOWNMENU_OPEN_MENU, issecurevariable, hooksecurefunc
 local select, pairs, format, getglobal, loadstring, type, pcall, gsub, wipe, tonumber = _G.select, _G.pairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.wipe, _G.tonumber
 local strsplit, strrep = _G.string.split, _G.string.rep
 local mmin, mfloor, mround = _G.math.min, _G.math.floor, _G.Round
@@ -195,9 +194,9 @@ end
 
 -- Exec functions
 
-function RE:ScriptError(type, err)
+function RE:ScriptError(aspect, err)
 	local name, line, msg = err:match('%[string (".-")%]:(%d+): (.*)')
-	printf('%s error%s:|cFFFFFFFF\n %s', type, name and format(' in |cFFFFFFFF%s|r|cffff6600 at line |cFFFFFFFF%d|r|cffff6600', name, line, msg) or '', err)
+	printf('%s error%s:|cFFFFFFFF\n %s', aspect, name and format(' in |cFFFFFFFF%s|r|cffff6600 at line |cFFFFFFFF%d|r|cffff6600', name, line, msg) or '', err)
 	RE.ErrorOverride = tonumber(line)
 	RE:OnUpdateLines()
 end
@@ -275,11 +274,11 @@ function RE:OnLoad(self)
 
 	_G.SLASH_HACKSLASH1 = '/hack'
 	_G.SlashCmdList['HACKSLASH'] =
-	function(name)
+	function(n)
 		if name == '' then
 			RE:Toggle()
 		else
-			RE:Run(name)
+			RE:Run(n)
 		end
 	end
 end
@@ -382,7 +381,7 @@ function RE:OnListItemClicked(id)
 end
 
 function RE:OnListItemAutorunClicked(id, enable)
-	ListItemClickCommon(id, function(_, selected) items[selected].autorun = enable end)
+	ListItemClickCommon(id, function(_, s) items[s].autorun = enable end)
 end
 
 function RE:UpdateNumListItemsVisible()
@@ -456,7 +455,7 @@ function RE:DoSearch(direction) -- 1=down, -1=up
 			it = 1 -- wrap at..
     elseif it < 1 then
 			it = #items -- ..either end
-  	end
+    end
 	  if RE:SearchMatch(items[it]) then
 	    RE:SelectListItem(it)
 	    RE:ScrollSelectedIntoView()
@@ -710,7 +709,7 @@ do
 		{text = 'Guild', func = function(self) RE:SendPage(items[selected], self.value) end},
 		{text = 'Cancel'},
 	}
-	CreateFrame('Frame', 'HackSendMenu', HackListFrame, 'UIDropDownMenuTemplate')
+	CreateFrame('Frame', 'HackSendMenu', _G.HackListFrame, 'UIDropDownMenuTemplate')
 	function RE:Send()
 		menu[2].disabled = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) == 0
 		menu[3].disabled = not UnitInRaid('player')

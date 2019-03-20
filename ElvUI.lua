@@ -1,8 +1,8 @@
 local _G = _G
 local unpack = _G.unpack
 
-if not AddOnSkins then return end
-local AS = unpack(AddOnSkins)
+if not _G.AddOnSkins then return end
+local AS = unpack(_G.AddOnSkins)
 if not AS:CheckAddOn('REHack') then return end
 
 function AS:REHack()

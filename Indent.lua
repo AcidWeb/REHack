@@ -333,7 +333,7 @@ local function nextComment(text, pos)
 		return tokens.TOKEN_COMMENT_LONG, nextPos2
 	end
 
-	local byte = stringbyte(text, pos)
+	local byte
 
 	-- Short comment, find the first linebreak
 	while true do
@@ -601,7 +601,7 @@ function lib.colorCodeCode(code, colorTable, caretPosition)
 		end
 
 		if tokenType == tokens.TOKEN_COLORCODE_START or tokenType == tokens.TOKEN_COLORCODE_STOP or tokenType == tokens.TOKEN_UNKNOWN then
-			-- ignore color codes
+				-- ignore color codes
 
 		elseif tokenType == tokens.TOKEN_LINEBREAK or tokenType == tokens.TOKEN_WHITESPACE then
 			if tokenType == tokens.TOKEN_LINEBREAK then
@@ -848,7 +848,7 @@ end
 
 
 -- WoW specific code:
-local GetTime = GetTime
+local GetTime = _G.GetTime
 
 local editboxSetText
 local editboxGetText
@@ -934,13 +934,13 @@ function lib.stripWowColorsWithPos(code, pos)
 end
 
 -- returns the padded code, and true if modified, false if unmodified
-local linebreak = stringbyte("\n")
+-- local linebreak = stringbyte("\n")
 function lib.padWithLinebreaks(code)
 	do
 		return code, false
 	end
 
-	local len = stringlen(code)
+	--[[local len = stringlen(code)
 	if stringbyte(code, len) == linebreak then
 		if stringbyte(code, len - 1) == linebreak then
             return code, false
@@ -948,7 +948,7 @@ function lib.padWithLinebreaks(code)
 		return code .. "\n", true
 	end
 	return code .. "\n\n", true
-
+	]]--
 end
 
 local defaultColorTable
