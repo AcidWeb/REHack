@@ -275,7 +275,7 @@ function RE:OnLoad(self)
 	_G.SLASH_HACKSLASH1 = '/hack'
 	_G.SlashCmdList['HACKSLASH'] =
 	function(n)
-		if name == '' then
+		if n == '' then
 			RE:Toggle()
 		else
 			RE:Run(n)
