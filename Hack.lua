@@ -707,6 +707,7 @@ do
 		{text = 'Party', func = function(self) RE:SendPage(items[selected], self.value) end},
 		{text = 'Raid',  func = function(self) RE:SendPage(items[selected], self.value) end},
 		{text = 'Guild', func = function(self) RE:SendPage(items[selected], self.value) end},
+		{text = 'CopyPasta', func = function(self) RE:PastePage(items[selected]) end},
 		{text = 'Cancel'},
 	}
 	CreateFrame('Frame', 'HackSendMenu', _G.HackListFrame, 'UIDropDownMenuTemplate')
@@ -720,6 +721,19 @@ end
 
 function RE:SendPage(page, channel, name)
 	COMM:SendCommMessage('REHack', page.name..'：'..page.data, channel, name, 'BULK')
+end
+
+function RE:PastePage(page)
+	local lines = {strsplit('\n', page.data)}
+	for _, line in ipairs(lines) do
+		if line ~= '' and line:match('%S') ~= nil and line:match('^%s--') == nil then
+			_G.ChatFrame_OpenChat('')
+			local ChatFrame = _G.ChatEdit_GetActiveWindow()
+			ChatFrame:SetText(line)
+			_G.ChatEdit_SendText(ChatFrame, false)
+			_G.ChatEdit_DeactivateChat(ChatFrame)
+		end
+	end
 end
 
 function RE:MakeESCable(frame, enable)
