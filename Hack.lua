@@ -113,6 +113,7 @@ _G.REHackDB = {
 	  }
 	},
 	imported = false,
+	reload = false,
 }
 
 RE.Tooltips = {
@@ -298,6 +299,7 @@ function RE:OnLoad(self)
 	end
 
 	self:RegisterEvent('ADDON_LOADED')
+	self:RegisterEvent('PLAYER_ENTERING_WORLD')
 
 	_G.SLASH_HACKSLASH1 = '/hack'
 	_G.SlashCmdList['HACKSLASH'] =
@@ -363,6 +365,14 @@ function RE:ADDON_LOADED(_, addon)
 		end
 
 		_G.HackListFrame:UnregisterEvent('ADDON_LOADED')
+	end
+end
+
+function RE:PLAYER_ENTERING_WORLD(_)
+	if db.reload then
+		RE:Toggle()
+		RE:OnListItemClicked(db.reload)
+		db.reload = false
 	end
 end
 
@@ -600,6 +610,9 @@ function RE:MoveDown()
 end
 
 function RE:ReloadUI()
+	if mode == 'page' then
+		db.reload = selected
+	end
 	ReloadUI()
 end
 
