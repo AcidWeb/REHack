@@ -1,6 +1,6 @@
-## Interface: 80300
+## Interface: 90001
 ## Title: |cFF74D06CRE|rHack
-## Version: 2.2.2
+## Version: 2.3.0
 ## Notes: Notebook/coding framework.
 ## Author: AcidWeb, Mud, Vandesdelca32
 ## SavedVariables: REHackDB, REHackSV
