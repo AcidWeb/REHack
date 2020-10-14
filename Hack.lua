@@ -22,7 +22,6 @@ local StaticPopup_Show = _G.StaticPopup_Show
 local FauxScrollFrame_Update = _G.FauxScrollFrame_Update
 local FauxScrollFrame_GetOffset = _G.FauxScrollFrame_GetOffset
 local FauxScrollFrame_SetOffset = _G.FauxScrollFrame_SetOffset
-local ElvUI = _G.ElvUI
 
 -- default settings saved variables
 _G.REHackSV = {}
@@ -134,17 +133,12 @@ end
 local function getobj(...)
 	return getglobal(format(...))
 end
-local function enableButton(b,e)
+local function enableButton(b, e)
 	if e then
 		_G.HackNew.Enable(b)
-	else _G.HackNew.Disable(b)
+	else
+		_G.HackNew.Disable(b)
 	end
-end
-local function ElvUISwag(sender)
-	if sender == 'Livarax-BurningLegion' then
-		return [[|TInterface\PvPRankBadges\PvPRank09:0|t ]]
-	end
-	return nil
 end
 
 function RE:Find(pattern) -- search books for a page by name
@@ -285,10 +279,6 @@ function RE:ADDON_LOADED(_, addon)
 		RE:DoAutorun()
 
 		COMM:RegisterComm('REHack', RE.OnAddonMessage)
-
-		if ElvUI then
-			ElvUI[1]:GetModule('Chat'):AddPluginIcons(ElvUISwag)
-		end
 
 		if IsAddOnLoaded('Hack') and not db.imported then
 			DisableAddOn('Hack')
