@@ -3,77 +3,7 @@ local _, RE = ...
 _G.REHack = RE
 local COMM = LibStub('AceComm-3.0')
 
--- UIDropDownMenu taint workaround by foxlit
-if (UIDROPDOWNMENU_OPEN_PATCH_VERSION or 0) < 1 then
-	UIDROPDOWNMENU_OPEN_PATCH_VERSION = 1
-	hooksecurefunc("UIDropDownMenu_InitializeHelper", function(frame)
-		if UIDROPDOWNMENU_OPEN_PATCH_VERSION ~= 1 then
-			return
-		end
-		if UIDROPDOWNMENU_OPEN_MENU and UIDROPDOWNMENU_OPEN_MENU ~= frame
-		   and not issecurevariable(UIDROPDOWNMENU_OPEN_MENU, "displayMode") then
-			UIDROPDOWNMENU_OPEN_MENU = nil
-			local t, f, prefix, i = _G, issecurevariable, " \0", 1
-			repeat
-				i, t[prefix .. i] = i + 1
-			until f("UIDROPDOWNMENU_OPEN_MENU")
-		end
-	end)
-end
-if (COMMUNITY_UIDD_REFRESH_PATCH_VERSION or 0) < 2 then
-	COMMUNITY_UIDD_REFRESH_PATCH_VERSION = 2
-	if select(4, GetBuildInfo()) > 8e4 then
-		local function CleanDropdowns()
-			if COMMUNITY_UIDD_REFRESH_PATCH_VERSION ~= 2 then
-				return
-			end
-			local f, f2 = FriendsFrame, FriendsTabHeader
-			local s = f:IsShown()
-			f:Hide()
-			f:Show()
-			if not f2:IsShown() then
-				f2:Show()
-				f2:Hide()
-			end
-			if not s then
-				f:Hide()
-			end
-		end
-		hooksecurefunc("Communities_LoadUI", CleanDropdowns)
-		hooksecurefunc("SetCVar", function(n)
-			if n == "lastSelectedClubId" then
-				CleanDropdowns()
-			end
-		end)
-	end
-end
-if (UIDD_REFRESH_OVERREAD_PATCH_VERSION or 0) < 1 then
-	UIDD_REFRESH_OVERREAD_PATCH_VERSION = 1
-	local function drop(t, k)
-		local c = 42
-		t[k] = nil
-		while not issecurevariable(t, k) do
-			if t[c] == nil then
-				t[c] = nil
-			end
-			c = c + 1
-		end
-	end
-	hooksecurefunc("UIDropDownMenu_InitializeHelper", function()
-		if UIDD_REFRESH_OVERREAD_PATCH_VERSION ~= 1 then
-			return
-		end
-		for i=1,UIDROPDOWNMENU_MAXLEVELS do
-			for j=1,UIDROPDOWNMENU_MAXBUTTONS do
-				local b, _ = _G["DropDownList" .. i .. "Button" .. j]
-				_ = issecurevariable(b, "checked")      or drop(b, "checked")
-				_ = issecurevariable(b, "notCheckable") or drop(b, "notCheckable")
-			end
-		end
-	end)
-end
-
-local select, pairs, format, getglobal, loadstring, type, pcall, gsub, wipe, tonumber = _G.select, _G.pairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.wipe, _G.tonumber
+local select, pairs, ipairs, format, getglobal, loadstring, type, pcall, gsub, wipe, tonumber = _G.select, _G.pairs, _G.ipairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.wipe, _G.tonumber
 local strsplit, strrep = _G.string.split, _G.string.rep
 local mmin, mfloor, mround = _G.math.min, _G.math.floor, _G.Round
 local tinsert, tremove = _G.table.insert, _G.table.remove
@@ -141,7 +71,14 @@ RE.Fonts = {
 	'Interface\\AddOns\\REHack\\Media\\VeraMono.ttf',
 	'Interface\\AddOns\\REHack\\Media\\SourceCodePro.ttf',
 }
-RE.Tab =	'   '
+RE.Backdrop = {
+	edgeFile = 'Interface\\AddOns\\REHack\\Media\\Border',
+	tile = true,
+	tileSize = 128,
+	edgeSize = 14,
+	insets = { left = 3, right = 3, top = 3, bottom = 3 },
+}
+RE.Tab = '   '
 RE.PlayerName =	UnitName('PLAYER')
 RE.ListItemHeight = 17 -- used in the XML, too
 RE.ListVOffset = 37 -- vertical space not available for list items
@@ -157,7 +94,7 @@ RE.CurrentlyRunning = ""
 
 _G.BINDING_HEADER_HACK = 'REHack'
 
-StaticPopupDialogs.HackAccept = {
+_G.StaticPopupDialogs.HackAccept = {
 	text = 'Accept new REHack page from %s?', button1 = 'Yes', button2 = 'No',
 	timeout = 0, whileDead = 1, hideOnEscape = 1,
 	OnAccept = function(self)
@@ -168,7 +105,7 @@ StaticPopupDialogs.HackAccept = {
 		COMM:SendCommMessage('REHack', '0', 'WHISPER', self.sender, 'BULK')
 	end,
 }
-StaticPopupDialogs.HackSendTo = {
+_G.StaticPopupDialogs.HackSendTo = {
 	text = 'Send selected page to', button1 = 'OK', button2 = 'CANCEL',
 	hasEditBox = 1, timeout = 0, whileDead = 1, hideOnEscape = 1,
 	OnAccept = function(self)
@@ -177,7 +114,7 @@ StaticPopupDialogs.HackSendTo = {
 		RE:SendPage(self.page, 'WHISPER', name)
 	end
 }
-StaticPopupDialogs.REHackDelete = {
+_G.StaticPopupDialogs.REHackDelete = {
 	text = 'Delete selected %s?', button1 = 'Yes', button2 = 'No',
 	timeout = 0, whileDead = 1, hideOnEscape = 1,
 	OnAccept = function()
@@ -691,11 +628,16 @@ function RE:OnUpdateLines()
 		_G.HackEditBoxLineTest:SetWidth(targetWidth)
 		_G.HackEditBoxLineTest:SetText(line:gsub('|', '||'))
 		local linesNum = mround(_G.HackEditBoxLineTest:GetStringHeight() / db.fontsize)
-		if linesNum == 0 then linesNum = 1 end
+		if linesNum == 0 then
+			if #RE.LineProcessing == i then
+				break
+			end
+			linesNum = 1
+		end
 		if RE.ErrorOverride == i then
-			content = content..'|cFFFF0000'..i..'|r'..strrep('\n', linesNum)
+			content = content..'|cFFFF0000 '..i..'|r'..strrep('\n', linesNum)
 		elseif color then
-			content = content..'|cFFD3D3D3'..i..'|r'..strrep('\n', linesNum)
+			content = content..'|cFFD3D3D3 '..i..'|r'..strrep('\n', linesNum)
 		else
 			content = content..i..strrep('\n', linesNum)
 		end
@@ -752,7 +694,7 @@ do
 	}
 	CreateFrame('Frame', 'HackSendMenu', _G.HackListFrame, 'UIDropDownMenuTemplate')
 	function RE:Send()
-		menu[2].disabled = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) == 0
+		menu[2].disabled = GetNumGroupMembers(_G.LE_PARTY_CATEGORY_HOME) == 0
 		menu[3].disabled = not UnitInRaid('player')
 		menu[4].disabled = not IsInGuild()
 		EasyMenu(menu, _G.HackSendMenu, 'cursor', nil, nil, 'MENU')

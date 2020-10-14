@@ -1,5 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/..\..\FrameXML\UI.xsd">
 
+	<Script file="AntiTaint.lua"/>
 	<Script file="ElvUI.lua"/>
 	<Script file="Hack.lua"/>
 	<Script file="Indent.lua"/>
@@ -39,14 +40,10 @@
 		</Scripts>
 	</CheckButton>
 
-	<Frame name='T_HackResizableFrame' virtual='true' movable='true' resizable='true' enableMouse='true' hidden='false'>
-		<Backdrop edgeFile='Interface\AddOns\REHack\Media\Border' tile='true'>
-			<BackgroundInsets>
-				<AbsInset left='3' right='3' top='3' bottom='3'/>
-			</BackgroundInsets>
-			<TileSize val='128' />
-			<EdgeSize val='14' />
-		</Backdrop>
+	<Frame name='T_HackResizableFrame' inherits='BackdropTemplate' virtual='true' movable='true' resizable='true' enableMouse='true' hidden='false'>
+	    <KeyValues>
+			<KeyValue key='backdropInfo' value='REHack.Backdrop' type='global'/>
+    	</KeyValues>
 		<Layers>
 			<Layer level='BACKGROUND'>
 				<Texture name='$parentTitle'>
@@ -391,7 +388,7 @@
 		</Frames>
 		<Scripts>
 			<OnEvent>REHack[event](self, event, ...)</OnEvent>
-			<OnLoad>
+			<OnLoad inherit='prepend'>
 				REHack:OnLoad(self)
 				PanelTemplates_SetNumTabs(HackListFrame, 2)
 				PanelTemplates_SetTab(HackListFrame, 1)
@@ -546,10 +543,10 @@
 			</Button>
 		</Frames>
 		<Scripts>
-			<OnLoad>REHack:OnEditorLoad(self)</OnLoad>
+			<OnLoad inherit='prepend'>REHack:OnEditorLoad(self)</OnLoad>
 			<OnShow>REHack:OnEditorShow()</OnShow>
 			<OnHide>REHack:OnEditorHide()</OnHide>
-			<OnSizeChanged>HackEditBox:SetWidth(HackEditFrame:GetWidth())</OnSizeChanged>
+			<OnSizeChanged inherit='prepend'>HackEditBox:SetWidth(HackEditFrame:GetWidth())</OnSizeChanged>
 		</Scripts>
 	</Frame>
 </Ui>
