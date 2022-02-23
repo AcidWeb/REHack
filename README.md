@@ -1,8 +1,8 @@
 ﻿# REHack
 
-[Curse](https://www.curseforge.com/wow/addons/rehack)
+[Wago Addons](https://addons.wago.io/addons/rehack-ui-notebook)
 
-[WoWInterface](http://www.wowinterface.com/downloads/fileinfo.php?id=24734)
+[WoWInterface](https://www.wowinterface.com/downloads/info24734-REHack-UINotebook.html)
 
 ## COPYRIGHT
 

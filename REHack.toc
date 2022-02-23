@@ -4,8 +4,6 @@
 ## Notes: Notebook/coding framework.
 ## Author: AcidWeb, Mud, Vandesdelca32
 ## SavedVariables: REHackDB, REHackSV
-## X-Website: https://www.curseforge.com/wow/addons/rehack
-## X-Curse-Project-ID: 299052
 ## X-WoWI-ID: 24734
 ## X-Wago-ID: qv63Wn6b
 
