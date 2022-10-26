@@ -272,8 +272,7 @@ function RE:ADDON_LOADED(_, addon)
 		RE:Snap()
 		_G.HackEditBoxLineTest:SetNonSpaceWrap(true)
 		_G.HackEditBoxLineBG:SetColorTexture(0, 0, 0, 0.50)
-		_G.HackListFrame:SetMaxResize(RE.MaxWidth, (RE.MaxVisible * RE.ListItemHeight) + RE.ListVOffset + 5)
-		_G.HackListFrame:SetMinResize(RE.MinWidth, RE.MinHeight)
+		_G.HackListFrame:SetResizeBounds(RE.MinWidth, RE.MinHeight, RE.MaxWidth, (RE.MaxVisible * RE.ListItemHeight) + RE.ListVOffset + 5)
 		_G.HackListFrame:SetScript('OnSizeChanged', RE.UpdateNumListItemsVisible)
 		RE:UpdateNumListItemsVisible()
 		RE:DoAutorun()
@@ -563,16 +562,16 @@ function RE:FontCycle()
 end
 
 function RE:UpdateFont()
-	_G.HackEditBox:SetFont(RE.Fonts[db.font], db.fontsize)
+	_G.HackEditBox:SetFont(RE.Fonts[db.font], db.fontsize, '')
 	_G.HackEditBox:SetTextInsets(24 + db.fontsize, 40, 4, 9)
 	_G.HackEditBoxLine:ClearAllPoints()
-	_G.HackEditBoxLine:SetFont(RE.Fonts[db.font], db.fontsize)
+	_G.HackEditBoxLine:SetFont(RE.Fonts[db.font], db.fontsize, '')
 	_G.HackEditBoxLine:SetPoint('TOPRIGHT', _G.HackEditBox, 'TOPLEFT', 14 + db.fontsize, -4)
 	_G.HackEditBoxLine:SetPoint('BOTTOMRIGHT', _G.HackEditBox, 'BOTTOMLEFT', 14 + db.fontsize, 9)
 	_G.HackEditBoxLineBG:ClearAllPoints()
 	_G.HackEditBoxLineBG:SetPoint('TOPLEFT', _G.HackEditBox, 'TOPLEFT')
 	_G.HackEditBoxLineBG:SetPoint('BOTTOMRIGHT', _G.HackEditBox, 'BOTTOMLEFT', 20 + db.fontsize, 5)
-	_G.HackEditBoxLineTest:SetFont(RE.Fonts[db.font], db.fontsize)
+	_G.HackEditBoxLineTest:SetFont(RE.Fonts[db.font], db.fontsize, '')
 end
 
 function RE:OnButtonClick(name)
@@ -649,7 +648,7 @@ end
 
 function RE:OnEditorLoad(self)
 	tinsert(_G.UISpecialFrames, 'HackEditFrame')
-	self:SetMinResize(RE.MinWidth,RE.MinHeight)
+	self:SetResizeBounds(RE.MinWidth, RE.MinHeight)
 end
 
 function RE:Snap()

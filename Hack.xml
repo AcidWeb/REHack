@@ -23,7 +23,7 @@
 		</Scripts>
 	</Button>
 
-	<CheckButton name='T_HackCheckButton' inherits='OptionsCheckButtonTemplate,T_HackTooltipEnabled' virtual='true'>
+	<CheckButton name='T_HackCheckButton' inherits='InterfaceOptionsCheckButtonTemplate,T_HackTooltipEnabled' virtual='true'>
 		<Size>
 			<AbsDimension x='16' y='16'/>
 		</Size>
@@ -75,10 +75,11 @@
 		</Layers>
 		<Frames>
 			<Button name='$parentClose' inherits='UIPanelCloseButton'>
+				<Size x="16" y="16"/>
 				<Anchors>
 					<Anchor point='TOPRIGHT'>
 						<Offset>
-							<AbsDimension x='2' y='1'/>
+							<AbsDimension x='-4' y='-6'/>
 						</Offset>
 					</Anchor>
 				</Anchors>
@@ -302,7 +303,11 @@
 			</Button>
 			<CheckButton name='HackSearchBody' inherits='T_HackSearchCheck'>
 				<Anchors>
-					<Anchor point='RIGHT' relativePoint='LEFT' relativeTo='HackListFrameClose'/>
+					<Anchor point='RIGHT' relativePoint='LEFT' relativeTo='HackListFrameClose'>
+						<Offset>
+							<AbsDimension x='-3' y='0'/>
+						</Offset>
+					</Anchor>
 				</Anchors>
 			</CheckButton>
 			<CheckButton name='HackSearchName' inherits='T_HackSearchCheck' checked='true'>
@@ -360,7 +365,7 @@
 				</Anchors>
 			</Button>
 
-			<Button name='$parentTab1' inherits='CharacterFrameTabButtonTemplate' id='1' text='pages'>
+			<Button name='$parentTab1' inherits='CharacterFrameTabTemplate' id='1' text='Pages'>
 				<Anchors>
 					<Anchor point='CENTER' relativePoint='BOTTOMLEFT'>
 						<Offset>
@@ -372,7 +377,7 @@
 					<OnClick>PanelTemplates_SetTab(HackListFrame, 1); REHack:SetMode('page')</OnClick>
 				</Scripts>
 			</Button>
-			<Button name='$parentTab2' inherits='CharacterFrameTabButtonTemplate' id='2' text='books'>
+			<Button name='$parentTab2' inherits='CharacterFrameTabTemplate' id='2' text='Books'>
 				<Anchors>
 					<Anchor point='LEFT' relativeTo='$parentTab1' relativePoint='RIGHT'>
 						<Offset>
@@ -452,7 +457,11 @@
 			</ScrollFrame>
 			<Button name='HackFontCycle' inherits='T_HackButton'>
 				<Anchors>
-					<Anchor point='RIGHT' relativeTo='HackEditFrameClose' relativePoint='LEFT'/>
+					<Anchor point='RIGHT' relativeTo='HackEditFrameClose' relativePoint='LEFT'>
+						<Offset>
+							<AbsDimension x='-3' y='0'/>
+						</Offset>
+					</Anchor>
 				</Anchors>
 				<NormalTexture file='Interface\AddOns\REHack\Media\Buttons'>
 					<TexCoords left='.5' right='.625' top='.125' bottom='.25'/>
