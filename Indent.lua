@@ -928,7 +928,7 @@ end
 function lib.stripWowColorsWithPos(code, pos)
 	code = stringinsert(code, pos, "\2")
 	code = lib.stripWowColors(code)
-	pos = stringfind(code, "\2", 1, 1)
+	pos = stringfind(code, "\2", 1, true)
 	code = stringdelete(code, pos, pos)
 	return code, pos
 end
