@@ -86,7 +86,6 @@ RE.MinWidth = 296 -- keep buttons from crowding/overlapping
 RE.MaxWidth = 572 -- tune to match size of 200 character page name
 RE.MaxVisible = 50 -- num visible without scrolling; limits num HackListItems we must create
 RE.NumVisible = 0 -- calculated during list resize
-RE.Indent = {}
 RE.LineProcessing = {}
 RE.ErrorOverride = 0
 RE.CurrentlyRunning = ''
@@ -579,18 +578,21 @@ function RE:OnButtonClick(name)
 end
 
 function RE:ApplyColor(colorize)
+	local page = items[selected]
+	_G.HackEditBox:SetText(page.data)
 	if colorize then
-	  RE.Indent.enable(_G.HackEditBox, _G.REHackDB.customcolor, 3)
-	  RE.Indent.colorCodeEditbox(_G.HackEditBox)
+		_G.IndentationLib.enable(_G.HackEditBox, _G.REHackDB.customcolor, 3)
+		_G.IndentationLib.colorCodeEditbox(_G.HackEditBox)
+		_G.HackEditBox:SetText(page.data:gsub('\124\124', '\124'))
 	else
-	  RE.Indent.disable(_G.HackEditBox)
+		_G.IndentationLib.disable(_G.HackEditBox)
+		_G.HackEditBox:SetText(page.data:gsub('\124', '\124\124'))
 	end
 end
 
 function RE:EditPage()
 	local page = items[selected]
 	RE.revert = page.data
-	_G._G.HackEditBox:SetText(page.data)
 	_G.HackRevert:Disable()
 	_G.HackEditFrame:Show()
 	_G.HackEditBox:SetCursorPosition(0)

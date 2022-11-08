@@ -2,7 +2,7 @@
 
 	<Script file="ElvUI.lua"/>
 	<Script file="Hack.lua"/>
-	<Script file="Indent.lua"/>
+	<Script file="ForAllIndentsAndPurposes.lua"/>
 
 	<Button name='T_HackTooltipEnabled' virtual='true'>
 		<Scripts>
