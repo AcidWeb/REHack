@@ -90,8 +90,6 @@ RE.LineProcessing = {}
 RE.ErrorOverride = 0
 RE.CurrentlyRunning = ''
 
-_G.BINDING_HEADER_HACK = '|cFF74D06CRE|rHack'
-
 _G.StaticPopupDialogs.HackAccept = {
 	text = 'Accept new REHack page from %s?', button1 = 'Yes', button2 = 'No',
 	timeout = 0, whileDead = 1, hideOnEscape = 1,
