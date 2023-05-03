@@ -1,6 +1,6 @@
 ## Interface: 100100
 ## Title: |cFF74D06CRE|rHack
-## Version: 2.4.6
+## Version: 2.4.7
 ## Notes: Notebook/coding framework.
 ## Author: AcidWeb, Mud, Vandesdelca32
 ## SavedVariables: REHackDB, REHackSV

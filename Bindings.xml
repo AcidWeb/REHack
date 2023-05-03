@@ -1,5 +1,5 @@
 <Bindings>
-	<Binding category="|cFF74D06CRE|rHack" name="Toggle Main Window">REHack:Toggle()</Binding>
+	<Binding category="|cFF74D06CRE|rHack" name="Toggle Main Window">REHack_Toggle()</Binding>
 	<Binding category="|cFF74D06CRE|rHack" name="Run Page #1">REHack:Run(1)</Binding>
 	<Binding category="|cFF74D06CRE|rHack" name="Run Page #2">REHack:Run(2)</Binding>
 	<Binding category="|cFF74D06CRE|rHack" name="Run Page #3">REHack:Run(3)</Binding>
