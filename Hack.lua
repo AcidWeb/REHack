@@ -233,7 +233,7 @@ function RE:OnLoad(self)
 	_G.SlashCmdList['HACKSLASH'] =
 	function(n)
 		if n == '' then
-			RE:Toggle()
+			REHack_Toggle()
 		else
 			RE:Run(n)
 		end
@@ -293,7 +293,7 @@ end
 
 function RE:PLAYER_ENTERING_WORLD(_)
 	if db.reload then
-		RE:Toggle()
+		REHack_Toggle()
 		RE:OnListItemClicked(db.reload)
 		db.reload = false
 	end
@@ -438,7 +438,7 @@ function RE:ScrollSelectedIntoView()
 	RE:UpdateListItems()
 end
 
-function RE:Toggle(_)
+function REHack_Toggle(_)
 	if _G.HackListFrame:IsVisible() then
 	  _G.HackListFrame:Hide()
 	else

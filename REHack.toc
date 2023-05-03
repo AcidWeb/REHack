@@ -1,9 +1,11 @@
-## Interface: 100007
+## Interface: 100100
 ## Title: |cFF74D06CRE|rHack
-## Version: 2.4.5
+## Version: 2.4.6
 ## Notes: Notebook/coding framework.
 ## Author: AcidWeb, Mud, Vandesdelca32
 ## SavedVariables: REHackDB, REHackSV
+## AddonCompartmentFunc: REHack_Toggle
+## IconTexture: Interface\AddOns\REHack\RELogo
 ## X-WoWI-ID: 24734
 ## X-Wago-ID: qv63Wn6b
 
