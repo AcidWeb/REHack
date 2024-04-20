@@ -9,6 +9,5 @@
 ## X-WoWI-ID: 24734
 ## X-Wago-ID: qv63Wn6b
 
-TaintLess.xml
 Embeds.xml
 Hack.xml

@@ -1,31 +1,29 @@
-local _G = _G
 local _, RE = ...
-_G.REHack = RE
+REHack = RE
 local COMM = LibStub('AceComm-3.0')
 
-local select, pairs, ipairs, format, getglobal, loadstring, type, pcall, gsub, wipe, tonumber = _G.select, _G.pairs, _G.ipairs, _G.format, _G.getglobal, _G.loadstring, _G.type, _G.pcall, _G.gsub, _G.wipe, _G.tonumber
-local strsplit, strrep = _G.string.split, _G.string.rep
-local mmin, mfloor, mround = _G.math.min, _G.math.floor, _G.Round
-local tinsert, tremove = _G.table.insert, _G.table.remove
-local ReloadUI = _G.ReloadUI
-local CreateFrame = _G.CreateFrame
-local EasyMenu = _G.EasyMenu
-local PlaySound = _G.PlaySound
-local DisableAddOn = _G.DisableAddOn
-local IsAddOnLoaded = _G.IsAddOnLoaded
-local IsShiftKeyDown = _G.IsShiftKeyDown
-local IsInGuild = _G.IsInGuild
-local UnitName = _G.UnitName
-local UnitInRaid = _G.UnitInRaid
-local GetNumGroupMembers = _G.GetNumGroupMembers
-local StaticPopup_Show = _G.StaticPopup_Show
-local FauxScrollFrame_Update = _G.FauxScrollFrame_Update
-local FauxScrollFrame_GetOffset = _G.FauxScrollFrame_GetOffset
-local FauxScrollFrame_SetOffset = _G.FauxScrollFrame_SetOffset
+local strsplit, strrep = string.split, string.rep
+local mmin, mfloor, mround = math.min, math.floor, Round
+local tinsert, tremove = table.insert, table.remove
+local ReloadUI = ReloadUI
+local CreateFrame = CreateFrame
+local EasyMenu = EasyMenu
+local PlaySound = PlaySound
+local DisableAddOn = C_AddOns.DisableAddOn
+local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
+local IsShiftKeyDown = IsShiftKeyDown
+local IsInGuild = IsInGuild
+local UnitName = UnitName
+local UnitInRaid = UnitInRaid
+local GetNumGroupMembers = GetNumGroupMembers
+local StaticPopup_Show = StaticPopup_Show
+local FauxScrollFrame_Update = FauxScrollFrame_Update
+local FauxScrollFrame_GetOffset = FauxScrollFrame_GetOffset
+local FauxScrollFrame_SetOffset = FauxScrollFrame_SetOffset
 
 -- default settings saved variables
-_G.REHackSV = {}
-_G.REHackDB = {
+REHackSV = {}
+REHackDB = {
 	font = 1,
 	fontsize = 16,
 	snap = 1,
@@ -90,7 +88,7 @@ RE.LineProcessing = {}
 RE.ErrorOverride = 0
 RE.CurrentlyRunning = ''
 
-_G.StaticPopupDialogs.HackAccept = {
+StaticPopupDialogs.HackAccept = {
 	text = 'Accept new REHack page from %s?', button1 = 'Yes', button2 = 'No',
 	timeout = 0, whileDead = 1, hideOnEscape = 1,
 	OnAccept = function(self)
@@ -101,7 +99,7 @@ _G.StaticPopupDialogs.HackAccept = {
 		COMM:SendCommMessage('REHack', '0', 'WHISPER', self.sender, 'BULK')
 	end,
 }
-_G.StaticPopupDialogs.HackSendTo = {
+StaticPopupDialogs.HackSendTo = {
 	text = 'Send selected page to', button1 = 'OK', button2 = 'CANCEL',
 	hasEditBox = 1, timeout = 0, whileDead = 1, hideOnEscape = 1,
 	OnAccept = function(self)
@@ -110,7 +108,7 @@ _G.StaticPopupDialogs.HackSendTo = {
 		RE:SendPage(self.page, 'WHISPER', name)
 	end
 }
-_G.StaticPopupDialogs.REHackDelete = {
+StaticPopupDialogs.REHackDelete = {
 	text = 'Delete selected %s?', button1 = 'Yes', button2 = 'No',
 	timeout = 0, whileDead = 1, hideOnEscape = 1,
 	OnAccept = function()
@@ -125,21 +123,21 @@ local mode = 'page' -- 'page' or 'book'
 local selected = nil -- index of selected list item
 
 local function printf(...)
-	_G.DEFAULT_CHAT_FRAME:AddMessage('|cffff6600<|r|cFF74D06CRE|r|cffff6600Hack>: '..format(...)..'|r')
+	DEFAULT_CHAT_FRAME:AddMessage('|cffff6600<|r|cFF74D06CRE|r|cffff6600Hack>: '..format(...)..'|r')
 end
 local function getobj(...)
 	return getglobal(format(...))
 end
 local function enableButton(b, e)
 	if e then
-		_G.HackNew.Enable(b)
+		HackNew.Enable(b)
 	else
-		_G.HackNew.Disable(b)
+		HackNew.Disable(b)
 	end
 end
 
 function RE:Find(pattern) -- search books for a page by name
-	for _, book in pairs(_G.REHackDB.books) do
+	for _, book in pairs(REHackDB.books) do
 		for _, page in pairs(book.data) do
 			if page.name:match(pattern) then
 				return page
@@ -207,7 +205,7 @@ function RE:SV()
 end
 
 function RE:DoAutorun()
-	for _, book in pairs(_G.REHackDB.books) do
+	for _, book in pairs(REHackDB.books) do
 		for _, page in pairs(book.data) do
 			if page.autorun then
 				RE:Execute(RE:Compile(page))
@@ -221,7 +219,7 @@ end
 function RE:OnLoad(self)
 	local name = 'HackListItem'
 	for i=2, RE.MaxVisible do
-		local li = CreateFrame('Button', name..i, _G.HackListFrame, 'T_HackListItem')
+		local li = CreateFrame('Button', name..i, HackListFrame, 'T_HackListItem')
 		li:SetPoint('TOP', name..(i-1), 'BOTTOM')
 		li:SetID(i)
 	end
@@ -229,8 +227,8 @@ function RE:OnLoad(self)
 	self:RegisterEvent('ADDON_LOADED')
 	self:RegisterEvent('PLAYER_ENTERING_WORLD')
 
-	_G.SLASH_HACKSLASH1 = '/hack'
-	_G.SlashCmdList['HACKSLASH'] =
+	SLASH_HACKSLASH1 = '/hack'
+	SlashCmdList['HACKSLASH'] =
 	function(n)
 		if n == '' then
 			REHack_Toggle()
@@ -259,18 +257,18 @@ end
 
 function RE:ADDON_LOADED(_, addon)
 	if addon == 'REHack' then
-		sv = _G.REHackSV
-		db = _G.REHackDB
+		sv = REHackSV
+		db = REHackDB
 		items = db.books[db.book].data
 		RE:UpdateFont()
 		RE:UpdateButtons()
 		RE:UpdateSearchContext()
-		_G.HackSnap:SetChecked(_G.REHackDB.snap)
+		HackSnap:SetChecked(REHackDB.snap)
 		RE:Snap()
-		_G.HackEditBoxLineTest:SetNonSpaceWrap(true)
-		_G.HackEditBoxLineBG:SetColorTexture(0, 0, 0, 0.50)
-		_G.HackListFrame:SetResizeBounds(RE.MinWidth, RE.MinHeight, RE.MaxWidth, (RE.MaxVisible * RE.ListItemHeight) + RE.ListVOffset + 5)
-		_G.HackListFrame:SetScript('OnSizeChanged', RE.UpdateNumListItemsVisible)
+		HackEditBoxLineTest:SetNonSpaceWrap(true)
+		HackEditBoxLineBG:SetColorTexture(0, 0, 0, 0.50)
+		HackListFrame:SetResizeBounds(RE.MinWidth, RE.MinHeight, RE.MaxWidth, (RE.MaxVisible * RE.ListItemHeight) + RE.ListVOffset + 5)
+		HackListFrame:SetScript('OnSizeChanged', RE.UpdateNumListItemsVisible)
 		RE:UpdateNumListItemsVisible()
 		RE:DoAutorun()
 
@@ -278,7 +276,7 @@ function RE:ADDON_LOADED(_, addon)
 
 		if IsAddOnLoaded('Hack') and not db.imported then
 			DisableAddOn('Hack')
-			for _, book in pairs(_G.HackDB.books) do
+			for _, book in pairs(HackDB.books) do
 				for _, page in pairs(book.data) do
 					RE:New(page)
 				end
@@ -287,7 +285,7 @@ function RE:ADDON_LOADED(_, addon)
 			printf('Import from Hack complete. Reload your UI.')
 		end
 
-		_G.HackListFrame:UnregisterEvent('ADDON_LOADED')
+		HackListFrame:UnregisterEvent('ADDON_LOADED')
 	end
 end
 
@@ -307,14 +305,14 @@ function RE:SetMode(newmode)
 		db.book = mmin(db.book, #db.books)
 		items = db.books[db.book].data
 		selected = nil
-		_G.HackSearchBody:Show()
-		_G.HackSend:Show()
+		HackSearchBody:Show()
+		HackSend:Show()
 	else -- 'book'
 		items = db.books
 		selected = db.book
-		_G.HackSearchBody:Hide()
-		_G.HackEditFrame:Hide()
-		_G.HackSend:Hide()
+		HackSearchBody:Hide()
+		HackEditFrame:Hide()
+		HackSend:Hide()
 	end
 	RE:UpdateButtons()
 	RE:UpdateListItems()
@@ -331,8 +329,8 @@ function RE:SelectListItem(index)
 end
 
 local function ListItemClickCommon(id, op)
-	PlaySound(_G.SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
-	op(nil, id + FauxScrollFrame_GetOffset(_G.HackListScrollFrame))
+	PlaySound(SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON)
+	op(nil, id + FauxScrollFrame_GetOffset(HackListScrollFrame))
 	RE:UpdateListItems()
 end
 
@@ -345,15 +343,15 @@ function RE:OnListItemAutorunClicked(id, enable)
 end
 
 function RE:UpdateNumListItemsVisible()
-	local visible = mfloor((_G.HackListFrame:GetHeight()-RE.ListVOffset) / RE.ListItemHeight)
+	local visible = mfloor((HackListFrame:GetHeight()-RE.ListVOffset) / RE.ListItemHeight)
 	RE.NumVisible = mmin(RE.MaxVisible, visible)
 	RE:UpdateListItems()
 end
 
 function RE:UpdateListItems()
-	local scrollFrameWidth = _G.HackListFrame:GetWidth() - 18 -- N = inset from right edge
-	FauxScrollFrame_Update(_G.HackListScrollFrame, #items, RE.NumVisible, RE.ListItemHeight, nil, nil, nil, _G.HackListScrollFrame, scrollFrameWidth - 17, scrollFrameWidth) -- N = room for scrollbar
-	local offset = FauxScrollFrame_GetOffset(_G.HackListScrollFrame)
+	local scrollFrameWidth = HackListFrame:GetWidth() - 18 -- N = inset from right edge
+	FauxScrollFrame_Update(HackListScrollFrame, #items, RE.NumVisible, RE.ListItemHeight, nil, nil, nil, HackListScrollFrame, scrollFrameWidth - 17, scrollFrameWidth) -- N = room for scrollbar
+	local offset = FauxScrollFrame_GetOffset(HackListScrollFrame)
 	for widgetIndex=1, RE.MaxVisible do
 		local itemIndex = offset + widgetIndex
 		local item = items[itemIndex]
@@ -389,16 +387,16 @@ function RE:UpdateListItems()
 end
 
 function RE:UpdateButtons()
-	enableButton(_G.HackDelete, selected)
-	enableButton(_G.HackRename, selected)
-	enableButton(_G.HackSend, selected)
-	enableButton(_G.HackMoveUp, selected and selected > 1)
-	enableButton(_G.HackMoveDown, selected and selected < #items)
+	enableButton(HackDelete, selected)
+	enableButton(HackRename, selected)
+	enableButton(HackSend, selected)
+	enableButton(HackMoveUp, selected and selected > 1)
+	enableButton(HackMoveDown, selected and selected < #items)
 end
 
 function RE:UpdateSearchContext()
-  local pattern = _G.HackSearchEdit:GetText():gsub('[%[%]%%()]', '%%%1'):gsub('%a', function(c) return format('[%s%s]', c:lower(), c:upper()) end)
-  local nx, bx = _G.HackSearchName:GetChecked(), _G.HackSearchBody:GetChecked()
+  local pattern = HackSearchEdit:GetText():gsub('[%[%]%%()]', '%%%1'):gsub('%a', function(c) return format('[%s%s]', c:lower(), c:upper()) end)
+  local nx, bx = HackSearchName:GetChecked(), HackSearchBody:GetChecked()
   function RE:SearchMatch(item)
     return not (nx or bx) or (nx and item.name:match(pattern)) or (mode == 'page' and bx and item.data:match(pattern))
   end
@@ -419,43 +417,43 @@ function RE:DoSearch(direction) -- 1=down, -1=up
 	  if RE:SearchMatch(items[it]) then
 	    RE:SelectListItem(it)
 	    RE:ScrollSelectedIntoView()
-	    _G.HackSearchEdit:SetFocus()
+	    HackSearchEdit:SetFocus()
 	    break
 	  end
 	until it == start
 end
 
 function RE:ScrollSelectedIntoView()
-	local offset = FauxScrollFrame_GetOffset(_G.HackListScrollFrame)
+	local offset = FauxScrollFrame_GetOffset(HackListScrollFrame)
 	local id = selected - offset
 	if id >  RE.NumVisible then
 		offset = selected - RE.NumVisible
 	elseif
 		id <= 0 then offset = selected-1
 	end
-	FauxScrollFrame_SetOffset(_G.HackListScrollFrame, offset)
-	_G.HackListScrollFrameScrollBar:SetValue(offset * RE.ListItemHeight)
+	FauxScrollFrame_SetOffset(HackListScrollFrame, offset)
+	HackListScrollFrameScrollBar:SetValue(offset * RE.ListItemHeight)
 	RE:UpdateListItems()
 end
 
 function REHack_Toggle(_)
-	if _G.HackListFrame:IsVisible() then
-	  _G.HackListFrame:Hide()
+	if HackListFrame:IsVisible() then
+	  HackListFrame:Hide()
 	else
-	  _G.HackListFrame:Show()
+	  HackListFrame:Show()
 	end
 end
 
 function RE:Tooltip(self)
 	local which = self:GetName()
 	local tip = which:match('Autorun') and 'Automatically run this page when REHack loads' or format(RE.Tooltips[which], mode)
-	_G.GameTooltip:SetOwner(self, 'ANCHOR_RIGHT')
-	_G.GameTooltip:AddLine(tip)
-	_G.GameTooltip:Show()
+	GameTooltip:SetOwner(self, 'ANCHOR_RIGHT')
+	GameTooltip:AddLine(tip)
+	GameTooltip:Show()
 end
 
 function RE:Rename()
-	local id = selected - FauxScrollFrame_GetOffset(_G.HackListScrollFrame)
+	local id = selected - FauxScrollFrame_GetOffset(HackListScrollFrame)
 	local name = getobj('HackListItem%dName', id)
 	local edit = getobj('HackListItem%dEdit', id)
 	edit:SetText(items[selected].name)
@@ -480,7 +478,7 @@ function RE:New(page)
 	RE:SelectListItem(index)
 	RE:UpdateListItems()
 	RE:ScrollSelectedIntoView()
-	if _G.HackListFrame:IsShown() then RE:Rename() end
+	if HackListFrame:IsShown() then RE:Rename() end
 end
 
 function RE:Delete()
@@ -494,7 +492,7 @@ function RE:Delete()
 end
 
 function RE:DeleteSelected()
-	_G.HackEditFrame:Hide()
+	HackEditFrame:Hide()
 	sv[items[selected].name] = nil
 	tremove(items,selected)
 	if #items == 0 then selected = nil
@@ -504,9 +502,9 @@ function RE:DeleteSelected()
 end
 
 function RE:Revert()
-	_G.HackEditBox:SetText(RE.revert)
-	_G.HackEditBox:SetCursorPosition(0)
-	_G.HackRevert:Disable()
+	HackEditBox:SetText(RE.revert)
+	HackEditBox:SetCursorPosition(0)
+	HackRevert:Disable()
 end
 
 function RE:MoveItem(direction)
@@ -559,16 +557,16 @@ function RE:FontCycle()
 end
 
 function RE:UpdateFont()
-	_G.HackEditBox:SetFont(RE.Fonts[db.font], db.fontsize, '')
-	_G.HackEditBox:SetTextInsets(24 + db.fontsize, 40, 4, 9)
-	_G.HackEditBoxLine:ClearAllPoints()
-	_G.HackEditBoxLine:SetFont(RE.Fonts[db.font], db.fontsize, '')
-	_G.HackEditBoxLine:SetPoint('TOPRIGHT', _G.HackEditBox, 'TOPLEFT', 14 + db.fontsize, -4)
-	_G.HackEditBoxLine:SetPoint('BOTTOMRIGHT', _G.HackEditBox, 'BOTTOMLEFT', 14 + db.fontsize, 9)
-	_G.HackEditBoxLineBG:ClearAllPoints()
-	_G.HackEditBoxLineBG:SetPoint('TOPLEFT', _G.HackEditBox, 'TOPLEFT')
-	_G.HackEditBoxLineBG:SetPoint('BOTTOMRIGHT', _G.HackEditBox, 'BOTTOMLEFT', 20 + db.fontsize, 5)
-	_G.HackEditBoxLineTest:SetFont(RE.Fonts[db.font], db.fontsize, '')
+	HackEditBox:SetFont(RE.Fonts[db.font], db.fontsize, '')
+	HackEditBox:SetTextInsets(24 + db.fontsize, 40, 4, 9)
+	HackEditBoxLine:ClearAllPoints()
+	HackEditBoxLine:SetFont(RE.Fonts[db.font], db.fontsize, '')
+	HackEditBoxLine:SetPoint('TOPRIGHT', HackEditBox, 'TOPLEFT', 14 + db.fontsize, -4)
+	HackEditBoxLine:SetPoint('BOTTOMRIGHT', HackEditBox, 'BOTTOMLEFT', 14 + db.fontsize, 9)
+	HackEditBoxLineBG:ClearAllPoints()
+	HackEditBoxLineBG:SetPoint('TOPLEFT', HackEditBox, 'TOPLEFT')
+	HackEditBoxLineBG:SetPoint('BOTTOMRIGHT', HackEditBox, 'BOTTOMLEFT', 20 + db.fontsize, 5)
+	HackEditBoxLineTest:SetFont(RE.Fonts[db.font], db.fontsize, '')
 end
 
 function RE:OnButtonClick(name)
@@ -577,46 +575,46 @@ end
 
 function RE:ApplyColor(colorize)
 	local page = items[selected]
-	_G.HackEditBox:SetText(page.data)
+	HackEditBox:SetText(page.data)
 	if colorize then
-		_G.IndentationLib.enable(_G.HackEditBox, _G.REHackDB.customcolor, 3)
-		_G.IndentationLib.colorCodeEditbox(_G.HackEditBox)
-		_G.HackEditBox:SetText(page.data:gsub('\124\124', '\124'))
+		IndentationLib.enable(HackEditBox, REHackDB.customcolor, 3)
+		IndentationLib.colorCodeEditbox(HackEditBox)
+		HackEditBox:SetText(page.data:gsub('\124\124', '\124'))
 	else
-		_G.IndentationLib.disable(_G.HackEditBox)
-		_G.HackEditBox:SetText(page.data:gsub('\124', '\124\124'))
+		IndentationLib.disable(HackEditBox)
+		HackEditBox:SetText(page.data:gsub('\124', '\124\124'))
 	end
 end
 
 function RE:EditPage()
 	local page = items[selected]
 	RE.revert = page.data
-	_G.HackRevert:Disable()
-	_G.HackEditFrame:Show()
-	_G.HackEditBox:SetCursorPosition(0)
-	_G.HackColorize:SetChecked(page.colorize)
+	HackRevert:Disable()
+	HackEditFrame:Show()
+	HackEditBox:SetCursorPosition(0)
+	HackColorize:SetChecked(page.colorize)
 	RE:ApplyColor(page.colorize)
 end
 
 function RE:OnEditorTextChanged()
 	local page = items[selected]
-	page.data = _G.HackEditBox:GetText()
-	enableButton(_G.HackRevert, page.data ~= RE.revert)
-	if not _G.HackEditScrollFrameScrollBarThumbTexture:IsVisible() then
-		_G.HackEditScrollFrameScrollBar:Hide()
+	page.data = HackEditBox:GetText()
+	enableButton(HackRevert, page.data ~= RE.revert)
+	if not HackEditScrollFrameScrollBarThumbTexture:IsVisible() then
+		HackEditScrollFrameScrollBar:Hide()
 	end
 end
 
 function RE:OnUpdateLines()
 	local content = ''
 	local color = false
-	local targetWidth = _G.HackEditBox:GetWidth() - (64 + db.fontsize)
+	local targetWidth = HackEditBox:GetWidth() - (64 + db.fontsize)
 	wipe(RE.LineProcessing)
-	RE.LineProcessing = {strsplit('\n', _G.HackEditBox:GetText(true))}
+	RE.LineProcessing = {strsplit('\n', HackEditBox:GetText(true))}
 	for i, line in pairs(RE.LineProcessing) do
-		_G.HackEditBoxLineTest:SetWidth(targetWidth)
-		_G.HackEditBoxLineTest:SetText(line:gsub('|', '||'))
-		local linesNum = mround(_G.HackEditBoxLineTest:GetStringHeight() / db.fontsize)
+		HackEditBoxLineTest:SetWidth(targetWidth)
+		HackEditBoxLineTest:SetText(line:gsub('|', '||'))
+		local linesNum = mround(HackEditBoxLineTest:GetStringHeight() / db.fontsize)
 		if linesNum == 0 then
 			if #RE.LineProcessing == i then
 				break
@@ -633,35 +631,35 @@ function RE:OnUpdateLines()
 		color = not color
 	end
 	RE.ErrorOverride = 0
-	_G.HackEditBoxLine:SetText(content)
+	HackEditBoxLine:SetText(content)
 end
 
 function RE:OnEditorShow()
 	RE:MakeESCable('HackListFrame', false)
-	PlaySound(_G.SOUNDKIT.IG_QUEST_LIST_OPEN)
+	PlaySound(SOUNDKIT.IG_QUEST_LIST_OPEN)
 end
 
 function RE:OnEditorHide()
 	RE:MakeESCable('HackListFrame', true)
-	PlaySound(_G.SOUNDKIT.IG_QUEST_LIST_CLOSE)
+	PlaySound(SOUNDKIT.IG_QUEST_LIST_CLOSE)
 end
 
 function RE:OnEditorLoad(self)
-	tinsert(_G.UISpecialFrames, 'HackEditFrame')
+	tinsert(UISpecialFrames, 'HackEditFrame')
 	self:SetResizeBounds(RE.MinWidth, RE.MinHeight)
 end
 
 function RE:Snap()
-	_G.REHackDB.snap = _G.HackSnap:GetChecked()
-	if _G.REHackDB.snap then
-	  _G.HackEditFrame:ClearAllPoints()
-	  _G.HackEditFrame:SetPoint('TOPLEFT', _G.HackListFrame, 'TOPRIGHT', -2, 0)
+	REHackDB.snap = HackSnap:GetChecked()
+	if REHackDB.snap then
+	  HackEditFrame:ClearAllPoints()
+	  HackEditFrame:SetPoint('TOPLEFT', HackListFrame, 'TOPRIGHT', -2, 0)
 	end
 end
 
 function RE:Colorize()
 	local page = items[selected]
-	page.colorize = _G.HackColorize:GetChecked()
+	page.colorize = HackColorize:GetChecked()
 	RE:ApplyColor(page.colorize)
 end
 
@@ -681,12 +679,12 @@ do
 		{text = 'CopyPasta', func = function(self) RE:PastePage(items[selected]) end},
 		{text = 'Cancel'},
 	}
-	CreateFrame('Frame', 'HackSendMenu', _G.HackListFrame, 'UIDropDownMenuTemplate')
+	CreateFrame('Frame', 'HackSendMenu', HackListFrame, 'UIDropDownMenuTemplate')
 	function RE:Send()
-		menu[2].disabled = GetNumGroupMembers(_G.LE_PARTY_CATEGORY_HOME) == 0
+		menu[2].disabled = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) == 0
 		menu[3].disabled = not UnitInRaid('player')
 		menu[4].disabled = not IsInGuild()
-		EasyMenu(menu, _G.HackSendMenu, 'cursor', nil, nil, 'MENU')
+		EasyMenu(menu, HackSendMenu, 'cursor', nil, nil, 'MENU')
 	end
 end
 
@@ -698,26 +696,26 @@ function RE:PastePage(page)
 	local lines = {strsplit('\n', page.data)}
 	for _, line in ipairs(lines) do
 		if line ~= '' and line:match('%S') ~= nil and line:match('^%s--') == nil then
-			_G.ChatFrame_OpenChat('')
-			local ChatFrame = _G.ChatEdit_GetActiveWindow()
+			ChatFrame_OpenChat('')
+			local ChatFrame = ChatEdit_GetActiveWindow()
 			ChatFrame:SetText(line)
-			_G.ChatEdit_SendText(ChatFrame, false)
-			_G.ChatEdit_DeactivateChat(ChatFrame)
+			ChatEdit_SendText(ChatFrame, false)
+			ChatEdit_DeactivateChat(ChatFrame)
 		end
 	end
 end
 
 function RE:MakeESCable(frame, enable)
 	local index
-	for i=1,#_G.UISpecialFrames do
-		if _G.UISpecialFrames[i] == frame then
+	for i=1,#UISpecialFrames do
+		if UISpecialFrames[i] == frame then
 			index = i
 			break
 		end
 	end
 	if index and not enable then
-		tremove(_G.UISpecialFrames, index)
+		tremove(UISpecialFrames, index)
 	elseif not index and enable then
-		tinsert(_G.UISpecialFrames, 1, frame)
+		tinsert(UISpecialFrames, 1, frame)
 	end
 end
