@@ -276,7 +276,7 @@
 					<TexCoords left='.25' right='.375' top='.25' bottom='.375'/>
 				</DisabledTexture>
 			</Button>
-			<Button name='HackSend' inherits='T_HackButton'>
+			<DropdownButton name='HackSend' inherits='T_HackButton'>
 				<Anchors>
 					<Anchor point='LEFT' relativeTo='HackMoveUp' relativePoint='RIGHT'/>
 				</Anchors>
@@ -289,7 +289,7 @@
 				<DisabledTexture file="Interface\AddOns\REHack\Media\Buttons">
 					<TexCoords left=".625" right=".75" top=".5" bottom=".625"/>
 				</DisabledTexture>
-			</Button>
+			</DropdownButton>
 			<Button name='HackReloadUI' inherits='T_HackButton'>
 				<Anchors>
 					<Anchor point='LEFT' relativeTo='HackSend' relativePoint='RIGHT'/>

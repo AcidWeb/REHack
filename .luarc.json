@@ -4,6 +4,7 @@
 	"diagnostics.globals": [
         "LE_PARTY_CATEGORY_HOME",
         "DEFAULT_CHAT_FRAME",
+        "MenuUtil",
         "AddOnSkins",
         "HackDB",
         "HackListFrame",
@@ -34,7 +35,6 @@
         "HackColorize",
         "HackSendMenu",
         "ReloadUI",
-        "EasyMenu",
         "StaticPopupDialogs",
         "StaticPopup_Show",
         "FauxScrollFrame_Update",
@@ -48,7 +48,7 @@
         "ChatEdit_DeactivateChat"
     ],
     "diagnostics.disable": [
-		    "redundant-parameter",
+		"redundant-parameter",
         "param-type-mismatch",
         "cast-local-type",
         "need-check-nil",

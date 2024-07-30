@@ -7,15 +7,11 @@ local mmin, mfloor, mround = math.min, math.floor, Round
 local tinsert, tremove = table.insert, table.remove
 local ReloadUI = ReloadUI
 local CreateFrame = CreateFrame
-local EasyMenu = EasyMenu
 local PlaySound = PlaySound
 local DisableAddOn = C_AddOns.DisableAddOn
 local IsAddOnLoaded = C_AddOns.IsAddOnLoaded
 local IsShiftKeyDown = IsShiftKeyDown
-local IsInGuild = IsInGuild
 local UnitName = UnitName
-local UnitInRaid = UnitInRaid
-local GetNumGroupMembers = GetNumGroupMembers
 local StaticPopup_Show = StaticPopup_Show
 local FauxScrollFrame_Update = FauxScrollFrame_Update
 local FauxScrollFrame_GetOffset = FauxScrollFrame_GetOffset
@@ -663,29 +659,21 @@ function RE:Colorize()
 	RE:ApplyColor(page.colorize)
 end
 
-do
-	local menu = {
-		{text = 'Player', func = function()
+
+function RE:Send()
+	MenuUtil.CreateButtonMenu(_G['HackSend'],
+		{'Player', function()
 			local dialog = StaticPopup_Show('HackSendTo')
 			if dialog then
 				dialog.page = items[selected]
 				dialog.editBox:SetScript('OnEnterPressed', function(_) dialog.button1:Click() end)
 			end
-		end
-		},
-		{text = 'Party', func = function(self) RE:SendPage(items[selected], self.value) end},
-		{text = 'Raid',  func = function(self) RE:SendPage(items[selected], self.value) end},
-		{text = 'Guild', func = function(self) RE:SendPage(items[selected], self.value) end},
-		{text = 'CopyPasta', func = function(self) RE:PastePage(items[selected]) end},
-		{text = 'Cancel'},
-	}
-	CreateFrame('Frame', 'HackSendMenu', HackListFrame, 'UIDropDownMenuTemplate')
-	function RE:Send()
-		menu[2].disabled = GetNumGroupMembers(LE_PARTY_CATEGORY_HOME) == 0
-		menu[3].disabled = not UnitInRaid('player')
-		menu[4].disabled = not IsInGuild()
-		EasyMenu(menu, HackSendMenu, 'cursor', nil, nil, 'MENU')
-	end
+		end, 'PLAYER'},
+		{'Party', function(value) RE:SendPage(items[selected], value) end, 'PARTY'},
+		{'Raid', function(value) RE:SendPage(items[selected], value) end, 'RAID'},
+		{'Guild', function(value) RE:SendPage(items[selected], value) end, 'GUILD'},
+		{'CopyPasta', function() RE:PastePage(items[selected]) end, 'PASTE'}
+	);
 end
 
 function RE:SendPage(page, channel, name)
