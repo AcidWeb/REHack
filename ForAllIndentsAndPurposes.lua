@@ -1,3 +1,4 @@
+---@diagnostic disable: cast-local-type, param-type-mismatch, redundant-parameter
 -- For All Indents And Purposes
 local revision = 23
 -- Maintainer: kristofer.karlsson@gmail.com

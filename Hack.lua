@@ -16,6 +16,10 @@ local StaticPopup_Show = StaticPopup_Show
 local FauxScrollFrame_Update = FauxScrollFrame_Update
 local FauxScrollFrame_GetOffset = FauxScrollFrame_GetOffset
 local FauxScrollFrame_SetOffset = FauxScrollFrame_SetOffset
+local DeactivateChat = ChatFrameUtil.DeactivateChat
+local GetActiveWindow = ChatFrameUtil.GetActiveWindow
+local SendText = ChatFrameEditBoxMixin.SendText
+local OpenChat = ChatFrameUtil.OpenChat
 
 -- default settings saved variables
 REHackSV = {}
@@ -511,6 +515,7 @@ function RE:MoveItem(direction)
 		to = 1
 	end
 	while selected ~= to do
+	  ---@diagnostic disable-next-line: need-check-nil
 	  items[selected], items[selected + direction] = items[selected + direction], items[selected]
 	  selected = selected + direction
 	end
@@ -684,11 +689,11 @@ function RE:PastePage(page)
 	local lines = {strsplit('\n', page.data)}
 	for _, line in ipairs(lines) do
 		if line ~= '' and line:match('%S') ~= nil and line:match('^%s--') == nil then
-			ChatFrame_OpenChat('')
-			local ChatFrame = ChatEdit_GetActiveWindow()
+			OpenChat('')
+			local ChatFrame = GetActiveWindow()
 			ChatFrame:SetText(line)
-			ChatEdit_SendText(ChatFrame, false)
-			ChatEdit_DeactivateChat(ChatFrame)
+			SendText(ChatFrame, false)
+			DeactivateChat(ChatFrame)
 		end
 	end
 end
