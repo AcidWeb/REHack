@@ -1,17 +1,17 @@
-## Interface: 110200
+## Interface: 120000
 ## Title: |cFF74D06CRE|rHack
-## Version: 2.4.20
+## Version: 2.5.0
 ## Notes: Notebook/coding framework.
 ## Author: AcidWeb, Mud, Vandesdelca32
 ## SavedVariables: REHackDB, REHackSV
 ## AddonCompartmentFunc: REHack_Toggle
 ## IconTexture: Interface\AddOns\REHack\RELogo
-## Category-enUS: Development Tools
+## Category: Development Tools
 ## Category-deDE: Entwicklungstools
 ## Category-esES: Herramientas de Desarrollo
 ## Category-esMX: Herramientas de Desarrollo
 ## Category-frFR: Outils de Développement
-## Category-itIT:
+## Category-itIT: Strumenti di sviluppo
 ## Category-koKR:
 ## Category-ptBR: Ferramentas de Desenvolvimento
 ## Category-ruRU: Инструменты разработки
